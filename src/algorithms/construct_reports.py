@@ -42,15 +42,15 @@ def add_route(route, start_id, end_id, number_of_carrieges, cursor, loaded_df,
         point2 = cursor.fetchone()
 
         result[0] = result[0].append({columns[0]: point1[0] + ", " + point1[1],
-                                      columns[1]: str(point1[2]), columns[2]: str(point1[3]),
-                                      columns[3]: point2[0] + ", " + point2[1], columns[4]: str(point2[2]),
-                                      columns[5]: str(point2[3]), columns[6]: number_of_carriages1,
+                                      columns[1]: float(point1[2]), columns[2]: float(point1[3]),
+                                      columns[3]: point2[0] + ", " + point2[1], columns[4]: float(point2[2]),
+                                      columns[5]: float(point2[3]), columns[6]: number_of_carriages1,
                                       columns[7]: loaded, columns[8]: ''}, ignore_index=True)
 
         result[1] = result[1].append({columns[0]: point1[0] + ", " + point1[1],
-                                      columns[1]: str(point1[2]), columns[2]: str(point1[3]),
-                                      columns[3]: point2[0] + ", " + point2[1], columns[4]: str(point2[2]),
-                                      columns[5]: str(point2[3]), columns[6]: number_of_carriages2,
+                                      columns[1]: float(point1[2]), columns[2]: float(point1[3]),
+                                      columns[3]: point2[0] + ", " + point2[1], columns[4]: float(point2[2]),
+                                      columns[5]: float(point2[3]), columns[6]: number_of_carriages2,
                                       columns[7]: '', columns[8]: empty}, ignore_index=True)
 
         return result
@@ -61,29 +61,29 @@ def add_route(route, start_id, end_id, number_of_carrieges, cursor, loaded_df,
 
         if path[i + 1] == end_id:
             result[0] = result[0].append({columns[0]: point1[0] + ", " + point1[1],
-                                          columns[1]: str(point1[2]), columns[2]: str(point1[3]),
-                                          columns[3]: point2[0] + ", " + point2[1], columns[4]: str(point2[2]),
-                                          columns[5]: str(point2[3]), columns[6]: number_of_carriages1,
+                                          columns[1]: float(point1[2]), columns[2]: float(point1[3]),
+                                          columns[3]: point2[0] + ", " + point2[1], columns[4]: float(point2[2]),
+                                          columns[5]: float(point2[3]), columns[6]: number_of_carriages1,
                                           columns[7]: loaded, columns[8]: ''}, ignore_index=True)
 
             result[1] = result[1].append({columns[0]: point1[0] + ", " + point1[1],
-                                          columns[1]: str(point1[2]), columns[2]: str(point1[3]),
-                                          columns[3]: point2[0] + ", " + point2[1], columns[4]: str(point2[2]),
-                                          columns[5]: str(point2[3]), columns[6]: number_of_carriages2,
+                                          columns[1]: float(point1[2]), columns[2]: float(point1[3]),
+                                          columns[3]: point2[0] + ", " + point2[1], columns[4]: float(point2[2]),
+                                          columns[5]: float(point2[3]), columns[6]: number_of_carriages2,
                                           columns[7]: '', columns[8]: empty}, ignore_index=True)
 
 
         else:
             result[0] = result[0].append({columns[0]: point1[0] + ", " + point1[1],
-                                          columns[1]: str(point1[2]), columns[2]: str(point1[3]),
-                                          columns[3]: point2[0] + ", " + point2[1], columns[4]: str(point2[2]),
-                                          columns[5]: str(point2[3]), columns[6]: 0,
+                                          columns[1]: float(point1[2]), columns[2]: float(point1[3]),
+                                          columns[3]: point2[0] + ", " + point2[1], columns[4]: float(point2[2]),
+                                          columns[5]: float(point2[3]), columns[6]: 0,
                                           columns[7]: '', columns[8]: ''}, ignore_index=True)
 
             result[1] = result[1].append({columns[0]: point1[0] + ", " + point1[1],
-                                          columns[1]: str(point1[2]), columns[2]: str(point1[3]),
-                                          columns[3]: point2[0] + ", " + point2[1], columns[4]: str(point2[2]),
-                                          columns[5]: str(point2[3]), columns[6]: 0,
+                                          columns[1]: float(point1[2]), columns[2]: float(point1[3]),
+                                          columns[3]: point2[0] + ", " + point2[1], columns[4]: float(point2[2]),
+                                          columns[5]: float(point2[3]), columns[6]: 0,
                                           columns[7]: '', columns[8]: ''}, ignore_index=True)
 
         point1 = point2
@@ -91,17 +91,15 @@ def add_route(route, start_id, end_id, number_of_carrieges, cursor, loaded_df,
     return result
 
 
-def construct_sample_report(file_name, cursor):
-    data = pd.read_excel(file_name)
+def construct_sample_report(data, cursor):
     data = data.fillna('')
     detailed = data.groupby(['Станция отправления', 'Станция назначения', 'Станция текущей дислокации',
-                             'Груз'], sort=False)['Расстояние осталось (от текущей станции)'] \
-        .describe()[['count', 'mean']].reset_index()
+                             'Груз'], sort=False)['Расстояние осталось (от текущей станции)']\
+                            .describe()[['count', 'mean']].reset_index()
 
     graph = construct_graph(cursor)
 
     detailed.to_excel("output_files/Detailed.xlsx")
-    print(type(detailed))
     columns = ['Origin', 'Orig_Latitude', 'Orig_Longitude', 'Destination', 'Dest_Latitude', 'Dest_Longitude',
                'Кол-во вагонов', 'ГРУЖ', 'ПОРОЖ']
 
@@ -175,8 +173,8 @@ def construct_sample_report(file_name, cursor):
     return result
 
 
-def construct_report(file_name, cursor):
-    tmp = construct_sample_report(file_name, cursor)
+def construct_report_by_route(data, cursor, file_name):
+    tmp = construct_sample_report(data, cursor)
 
     res = tmp[0]
 
@@ -196,7 +194,8 @@ def construct_report(file_name, cursor):
     res2["Width"] = 5
     res2["Состояние"] = 'ПОРОЖ'
 
-    res3 = pd.concat([res, res2])
+    res3 = pd.concat([res, res2]).reset_index()
+
 
     res3 = res3.fillna('').groupby(['Origin', 'Orig_Latitude', 'Orig_Longitude', 'Destination', 'Dest_Latitude',
                                     'Dest_Longitude']).agg({'Кол-во вагонов': 'sum', 'ГРУЖ': ''.join, 'ПОРОЖ': ''.join})
@@ -210,8 +209,8 @@ def construct_report(file_name, cursor):
             res["Color"][row] = 100
             res["Width"][row] = 20
         if res2["Кол-во вагонов"][row] != 0:
-            res2["Color"][row] = 100
-            res2["Width"][row] = 20
+            res2["Color"][row] = 50
+            res2["Width"][row] = 10
         if res3["Кол-во вагонов"][row] != 0:
             res3["Color"][row] = 100
             res3["Width"][row] = 20
@@ -219,4 +218,37 @@ def construct_report(file_name, cursor):
     tmp = pd.concat([res, res2])
     res = pd.concat([tmp, res3])
 
-    res.to_excel("output_files/BI_result.xlsx")
+    res.reset_index().to_excel("output_files/" + file_name +".xlsx")
+
+
+def construct_report(file_name, cursor):
+    data = pd.read_excel(file_name)
+    stations = [
+        ['Актогай', 'Балхаш I'],
+        ['Балхаш I', 'Достык', 'Достык (эксп.)'],
+        ['Бозшаколь', 'Достык', 'Достык (эксп.)'],
+        ['Бозшаколь', 'Балхаш I'],
+        ['Бозшаколь', 'Ахангаран'],
+        ['Бозшаколь', 'Ежевая']
+    ]
+
+    routes = [
+        'Актогай - Балхаш',
+        'Балхаш - Достык',
+        'Бозшаколь - Достык',
+        'Бозшаколь - Балхаш',
+        'Бозшаколь - Ахангаран',
+        'Бозшаколь - Ежевая'
+    ]
+
+    construct_report_by_route(data, cursor, 'Общая карта')
+
+    for i in range(len(stations)):
+        df = data.loc[data['Станция отправления'].isin(stations[i]) & data['Станция назначения'].isin(stations[i])]
+        df = df.loc[0:, ['Станция отправления', 'Станция назначения', 'Станция текущей дислокации',
+                         'Груз', 'Расстояние осталось (от текущей станции)']]
+
+
+        construct_report_by_route(df, cursor, routes[i])
+
+
