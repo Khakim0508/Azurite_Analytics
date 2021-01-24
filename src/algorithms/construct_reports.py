@@ -12,7 +12,13 @@ def add_route(route, start_id, end_id, number_of_carrieges, cursor, loaded_df,
     loaded = ''
     empty = ''
     number_of_carriages1 = number_of_carriages2 = 0
+
+    cargo = cargo.strip()
+    # В переменную груза может попасть 12 пробелов и алгоритм будет считать что это груженые вагоны
+
     label = start + " - " + real_end + ": " + str(number_of_carrieges) + ", " + cargo + ", "
+
+
 
     if cargo != '':
         loaded = label + str(math.ceil(distance / 200)) + ' дн.;'
@@ -96,6 +102,7 @@ def construct_sample_report(data, cursor):
     detailed = data.groupby(['Станция отправления', 'Станция назначения', 'Станция текущей дислокации',
                              'Груз'], sort=False)['Расстояние осталось (от текущей станции)']\
                             .describe()[['count', 'mean']].reset_index()
+    detailed = detailed.fillna('')
 
     graph = construct_graph(cursor)
 
@@ -184,6 +191,7 @@ def construct_report_by_route(data, cursor, file_name):
     res["Color"] = 0
     res["Width"] = 5
     res["Состояние"] = 'ГРУЖ'
+    res.reset_index().to_excel("output_files/Huinya.xlsx")
 
     res2 = tmp[1]
 
@@ -193,6 +201,7 @@ def construct_report_by_route(data, cursor, file_name):
     res2["Color"] = 0
     res2["Width"] = 5
     res2["Состояние"] = 'ПОРОЖ'
+    res2.reset_index().to_excel("output_files/Huinya2.xlsx")
 
     res3 = pd.concat([res, res2]).reset_index()
 
@@ -241,9 +250,10 @@ def construct_report(file_name, cursor):
         'Бозшаколь - Ежевая'
     ]
 
-    construct_report_by_route(data, cursor, 'Общая карта')
+    #construct_report_by_route(data, cursor, 'Общая карта')
+    len(stations)
 
-    for i in range(len(stations)):
+    for i in range(1):
         df = data.loc[data['Станция отправления'].isin(stations[i]) & data['Станция назначения'].isin(stations[i])]
         df = df.loc[0:, ['Станция отправления', 'Станция назначения', 'Станция текущей дислокации',
                          'Груз', 'Расстояние осталось (от текущей станции)']]
