@@ -13,12 +13,13 @@ def add_route(route, start_id, end_id, number_of_carrieges, cursor, loaded_df,
     empty = ''
     number_of_carriages1 = number_of_carriages2 = 0
 
+    number_of_carrieges = int(number_of_carrieges)
+    # В метод попадает число вагонов представленных в виде числа с плавающей точкой
+
     cargo = cargo.strip()
     # В переменную груза может попасть 12 пробелов и алгоритм будет считать что это груженые вагоны
 
     label = start + " - " + real_end + ": " + str(number_of_carrieges) + ", " + cargo + ", "
-
-
 
     if cargo != '':
         loaded = label + str(math.ceil(distance / 200)) + ' дн.;'
@@ -100,8 +101,8 @@ def add_route(route, start_id, end_id, number_of_carrieges, cursor, loaded_df,
 def construct_sample_report(data, cursor):
     data = data.fillna('')
     detailed = data.groupby(['Станция отправления', 'Станция назначения', 'Станция текущей дислокации',
-                             'Груз'], sort=False)['Расстояние осталось (от текущей станции)']\
-                            .describe()[['count', 'mean']].reset_index()
+                             'Груз'], sort=False)['Расстояние осталось (от текущей станции)'] \
+        .describe()[['count', 'mean']].reset_index()
     detailed = detailed.fillna('')
 
     graph = construct_graph(cursor)
@@ -123,6 +124,7 @@ def construct_sample_report(data, cursor):
     route = {}
     old_start_id = 0
     counter = 1
+    miss_carrieges = 0
     for ind, row in detailed.iterrows():
         try:
             start = row[0]
@@ -169,65 +171,111 @@ def construct_sample_report(data, cursor):
                                                cursor, result[0], result[1],
                                                real_end_id, start, real_end, cargo, columns, distance)
 
-            iteration += 1
-            print("{} из {} маршрутов было обработано".format(iteration, num_of_routes))
+                    else:
+                        raise Exception
+
+                else:
+                    raise Exception
+
+                iteration += 1
+                print("{} из {} маршрутов было обработано".format(iteration, num_of_routes))
+
+            else:
+                raise Exception
+
         except Exception:
             iteration += 1
             print("{} из {} маршрутов не был обработан".format(iteration, num_of_routes))
+            print("Маршрут {} - {}: {} : {} не был обработан".format(start, end, real_end, number_of_carrieges))
+            miss_carrieges += number_of_carrieges
 
             continue
+
+    print(miss_carrieges)
 
     return result
 
 
 def construct_report_by_route(data, cursor, file_name):
     tmp = construct_sample_report(data, cursor)
+    loaded = tmp[0]
 
-    res = tmp[0]
+    loaded = loaded.fillna('').groupby(['Origin', 'Orig_Latitude', 'Orig_Longitude', 'Destination', 'Dest_Latitude',
+                                        'Dest_Longitude']).agg(
+        {'Кол-во вагонов': 'sum', 'ГРУЖ': ''.join, 'ПОРОЖ': ''.join})
 
-    res = res.fillna('').groupby(['Origin', 'Orig_Latitude', 'Orig_Longitude', 'Destination', 'Dest_Latitude',
+    loaded["Color"] = 0
+    loaded["Width"] = 5
+    loaded["Состояние"] = 'Груженый'
+    loaded["Груз"] = 'Все'
+
+    empty = tmp[1]
+
+    empty = empty.fillna('').groupby(['Origin', 'Orig_Latitude', 'Orig_Longitude', 'Destination', 'Dest_Latitude',
+                                      'Dest_Longitude']).agg(
+        {'Кол-во вагонов': 'sum', 'ГРУЖ': ''.join, 'ПОРОЖ': ''.join})
+    #
+    empty["Color"] = 0
+    empty["Width"] = 5
+    empty["Состояние"] = 'Порожний'
+    empty["Груз"] = 'Все'
+
+    all = pd.concat([loaded, empty])
+
+    all = all.fillna('').groupby(['Origin', 'Orig_Latitude', 'Orig_Longitude', 'Destination', 'Dest_Latitude',
                                   'Dest_Longitude']).agg({'Кол-во вагонов': 'sum', 'ГРУЖ': ''.join, 'ПОРОЖ': ''.join})
-    #
-    res["Color"] = 0
-    res["Width"] = 5
-    res["Состояние"] = 'ГРУЖ'
-    res.reset_index().to_excel("output_files/Huinya.xlsx")
 
-    res2 = tmp[1]
+    all["Color"] = 0
+    all["Width"] = 5
+    all["Состояние"] = 'Все'
+    all["Груз"] = 'Все'
 
-    res2 = res2.fillna('').groupby(['Origin', 'Orig_Latitude', 'Orig_Longitude', 'Destination', 'Dest_Latitude',
-                                    'Dest_Longitude']).agg({'Кол-во вагонов': 'sum', 'ГРУЖ': ''.join, 'ПОРОЖ': ''.join})
-    #
-    res2["Color"] = 0
-    res2["Width"] = 5
-    res2["Состояние"] = 'ПОРОЖ'
-    res2.reset_index().to_excel("output_files/Huinya2.xlsx")
+    if (int(sum(loaded['Кол-во вагонов'])) != 0):
+        for cargo in data["Груз"].unique():
+            try:
+                if len(str(cargo).strip()) != 0:
+                    df = data.loc[data['Груз'] == cargo]
 
-    res3 = pd.concat([res, res2]).reset_index()
+                    tmp = construct_sample_report(df, cursor)
+                    tmp_loaded = tmp[0]
+
+                    tmp_loaded["Color"] = 0
+                    tmp_loaded["Width"] = 5
+                    tmp_loaded["Состояние"] = 'Груженый'
+                    tmp_loaded["Груз"] = str(cargo).strip()
+
+                    loaded = pd.concat([loaded.reset_index(), tmp_loaded], ignore_index=True)
 
 
-    res3 = res3.fillna('').groupby(['Origin', 'Orig_Latitude', 'Orig_Longitude', 'Destination', 'Dest_Latitude',
-                                    'Dest_Longitude']).agg({'Кол-во вагонов': 'sum', 'ГРУЖ': ''.join, 'ПОРОЖ': ''.join})
-    #
-    res3["Color"] = 0
-    res3["Width"] = 5
-    res3["Состояние"] = 'ГРУЖ/ПОРОЖ'
+            except KeyError:
+                print("Something went wrong with cargo ")
+                continue
+            except Exception:
+                print("Something went wrong with cargo ")
+                continue
 
-    for row in range(len(res)):
-        if res["Кол-во вагонов"][row] != 0:
-            res["Color"][row] = 100
-            res["Width"][row] = 20
-        if res2["Кол-во вагонов"][row] != 0:
-            res2["Color"][row] = 50
-            res2["Width"][row] = 10
-        if res3["Кол-во вагонов"][row] != 0:
-            res3["Color"][row] = 100
-            res3["Width"][row] = 20
+    for row in range(len(loaded)):
+        if loaded["Кол-во вагонов"][row] != 0:
+            loaded["Color"][row] = 100
+            loaded["Width"][row] = 20
 
-    tmp = pd.concat([res, res2])
-    res = pd.concat([tmp, res3])
+    for row in range(len(empty)):
+        if empty["Кол-во вагонов"][row] != 0:
+            empty["Color"][row] = 100
+            empty["Width"][row] = 20
+        if all["Кол-во вагонов"][row] != 0:
+            all["Color"][row] = 100
+            all["Width"][row] = 20
 
-    res.reset_index().to_excel("output_files/" + file_name +".xlsx")
+    if (int(sum(loaded['Кол-во вагонов'])) != 0):
+        tmp = pd.concat([loaded, empty.reset_index()])
+        loaded = pd.concat([tmp, all.reset_index()])
+
+    else:
+        tmp = pd.concat([loaded.reset_index(), empty.reset_index()])
+        loaded = pd.concat([tmp.reset_index(), all.reset_index()])
+
+    loaded.reset_index().to_excel("output_files/" + file_name + ".xlsx")
 
 
 def construct_report(file_name, cursor):
@@ -251,14 +299,15 @@ def construct_report(file_name, cursor):
     ]
 
     #construct_report_by_route(data, cursor, 'Общая карта')
+
     len(stations)
 
-    for i in range(1):
+    for i in range(6):
         df = data.loc[data['Станция отправления'].isin(stations[i]) & data['Станция назначения'].isin(stations[i])]
         df = df.loc[0:, ['Станция отправления', 'Станция назначения', 'Станция текущей дислокации',
                          'Груз', 'Расстояние осталось (от текущей станции)']]
 
-
         construct_report_by_route(df, cursor, routes[i])
-
-
+        print()
+        print("Маршрут " + routes[i] + " был обработан")
+        print()
