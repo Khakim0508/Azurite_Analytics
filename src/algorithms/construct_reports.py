@@ -195,9 +195,27 @@ def construct_sample_report(data, cursor):
 
     return result
 
+def concat_two_data_frames(df1, df2, columns):
+
+    try:
+        df1 = df1.reset_index(drop=True, inplace=True)
+        df2 = df2.reset_index(drop=True, inplace=True)
+    except Exception:
+        pass
+
+    for ind, row in df2.iterrows():
+        tmp = {}
+        for i in columns:
+            tmp[i.strip()] = row[i.strip()]
+        df1 = df1.append(tmp, ignore_index=True)
+
+    return df1
 
 def construct_report_by_route(data, cursor, file_name):
     tmp = construct_sample_report(data, cursor)
+    columns = ['Origin', 'Orig_Latitude', 'Orig_Longitude', 'Destination', 'Dest_Latitude',
+               'Dest_Longitude', 'Кол-во вагонов', 'ГРУЖ', 'ПОРОЖ', "Color", "Width", "Состояние", "Груз"]
+
     loaded = tmp[0]
 
     loaded = loaded.fillna('').groupby(['Origin', 'Orig_Latitude', 'Orig_Longitude', 'Destination', 'Dest_Latitude',
@@ -210,17 +228,16 @@ def construct_report_by_route(data, cursor, file_name):
     loaded["Груз"] = 'Все'
 
     empty = tmp[1]
-
     empty = empty.fillna('').groupby(['Origin', 'Orig_Latitude', 'Orig_Longitude', 'Destination', 'Dest_Latitude',
-                                      'Dest_Longitude']).agg(
-        {'Кол-во вагонов': 'sum', 'ГРУЖ': ''.join, 'ПОРОЖ': ''.join})
-    #
+                                      'Dest_Longitude']).agg({'Кол-во вагонов': 'sum', 'ГРУЖ': ''.join, 'ПОРОЖ': ''.join})
+
     empty["Color"] = 0
     empty["Width"] = 5
     empty["Состояние"] = 'Порожний'
     empty["Груз"] = 'Все'
+    empty.to_excel("output_files/" + "file_name2" + ".xlsx")
 
-    all = pd.concat([loaded, empty])
+    all = pd.concat([loaded, empty], axis=0)
 
     all = all.fillna('').groupby(['Origin', 'Orig_Latitude', 'Orig_Longitude', 'Destination', 'Dest_Latitude',
                                   'Dest_Longitude']).agg({'Кол-во вагонов': 'sum', 'ГРУЖ': ''.join, 'ПОРОЖ': ''.join})
@@ -239,17 +256,18 @@ def construct_report_by_route(data, cursor, file_name):
                     tmp = construct_sample_report(df, cursor)
                     tmp_loaded = tmp[0]
 
+                    tmp_loaded = tmp_loaded.fillna('').groupby(
+                        ['Origin', 'Orig_Latitude', 'Orig_Longitude', 'Destination', 'Dest_Latitude',
+                         'Dest_Longitude']).agg(
+                        {'Кол-во вагонов': 'sum', 'ГРУЖ': ''.join, 'ПОРОЖ': ''.join})
+
                     tmp_loaded["Color"] = 0
                     tmp_loaded["Width"] = 5
                     tmp_loaded["Состояние"] = 'Груженый'
-                    tmp_loaded["Груз"] = str(cargo).strip()
+                    tmp_loaded["Груз"] = cargo
 
-                    loaded = pd.concat([loaded.reset_index(), tmp_loaded], ignore_index=True)
+                    loaded = pd.concat([loaded, tmp_loaded], axis=0)
 
-
-            except KeyError:
-                print("Something went wrong with cargo ")
-                continue
             except Exception:
                 print("Something went wrong with cargo ")
                 continue
@@ -267,13 +285,10 @@ def construct_report_by_route(data, cursor, file_name):
             all["Color"][row] = 100
             all["Width"][row] = 20
 
-    if (int(sum(loaded['Кол-во вагонов'])) != 0):
-        tmp = pd.concat([loaded, empty.reset_index()])
-        loaded = pd.concat([tmp, all.reset_index()])
 
-    else:
-        tmp = pd.concat([loaded.reset_index(), empty.reset_index()])
-        loaded = pd.concat([tmp.reset_index(), all.reset_index()])
+    tmp = pd.concat([loaded, empty], axis=0)
+
+    loaded = pd.concat([tmp, all], axis=0)
 
     loaded.reset_index().to_excel("output_files/" + file_name + ".xlsx")
 
@@ -298,11 +313,11 @@ def construct_report(file_name, cursor):
         'Бозшаколь - Ежевая'
     ]
 
-    #construct_report_by_route(data, cursor, 'Общая карта')
+    construct_report_by_route(data, cursor, 'Общая карта')
 
-    len(stations)
 
-    for i in range(6):
+
+    for i in range(len(stations)):
         df = data.loc[data['Станция отправления'].isin(stations[i]) & data['Станция назначения'].isin(stations[i])]
         df = df.loc[0:, ['Станция отправления', 'Станция назначения', 'Станция текущей дислокации',
                          'Груз', 'Расстояние осталось (от текущей станции)']]
