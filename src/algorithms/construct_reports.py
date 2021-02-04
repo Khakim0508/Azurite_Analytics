@@ -1,6 +1,7 @@
 import math
 
 import pandas as pd
+import datetime
 
 from src.algorithms.graph_algorithms import bfs
 from src.algorithms.graph_algorithms import construct_graph
@@ -195,26 +196,11 @@ def construct_sample_report(data, cursor):
 
     return result
 
-def concat_two_data_frames(df1, df2, columns):
 
-    try:
-        df1 = df1.reset_index(drop=True, inplace=True)
-        df2 = df2.reset_index(drop=True, inplace=True)
-    except Exception:
-        pass
 
-    for ind, row in df2.iterrows():
-        tmp = {}
-        for i in columns:
-            tmp[i.strip()] = row[i.strip()]
-        df1 = df1.append(tmp, ignore_index=True)
-
-    return df1
-
-def construct_report_by_route(data, cursor, file_name):
+def construct_report_by_route(data, cursor, file_name, sost, dt):
     tmp = construct_sample_report(data, cursor)
-    columns = ['Origin', 'Orig_Latitude', 'Orig_Longitude', 'Destination', 'Dest_Latitude',
-               'Dest_Longitude', 'Кол-во вагонов', 'ГРУЖ', 'ПОРОЖ', "Color", "Width", "Состояние", "Груз"]
+    main_stations = ['Актогай', 'Балхаш I', 'Достык', 'Достык (эксп.)', 'Бозшаколь', 'Ахангаран', 'Ежевая']
 
     loaded = tmp[0]
 
@@ -282,19 +268,32 @@ def construct_report_by_route(data, cursor, file_name):
             empty["Color"][row] = 100
             empty["Width"][row] = 20
         if all["Кол-во вагонов"][row] != 0:
-            all["Color"][row] = 100
+            if all["ГРУЖ"][row].strip() == "":
+                all["Color"][row] = 100
+            else:
+                all["Color"][row] = 300
+
             all["Width"][row] = 20
+
 
 
     tmp = pd.concat([loaded, empty], axis=0)
 
     loaded = pd.concat([tmp, all], axis=0)
 
+    if sost == 1:
+        pass
+    else:
+        loaded = loaded[loaded["Кол-во вагонов"] != 0]
+
+    loaded["Date"] = dt
+
     loaded.reset_index().to_excel("output_files/" + file_name + ".xlsx")
 
 
 def construct_report(file_name, cursor):
     data = pd.read_excel(file_name)
+    dt = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
     stations = [
         ['Актогай', 'Балхаш I'],
         ['Балхаш I', 'Достык', 'Достык (эксп.)'],
@@ -313,7 +312,7 @@ def construct_report(file_name, cursor):
         'Бозшаколь - Ежевая'
     ]
 
-    construct_report_by_route(data, cursor, 'Общая карта')
+    construct_report_by_route(data, cursor, 'Общая карта', 0, dt)
 
 
 
@@ -322,7 +321,7 @@ def construct_report(file_name, cursor):
         df = df.loc[0:, ['Станция отправления', 'Станция назначения', 'Станция текущей дислокации',
                          'Груз', 'Расстояние осталось (от текущей станции)']]
 
-        construct_report_by_route(df, cursor, routes[i])
+        construct_report_by_route(df, cursor, routes[i], 1, dt)
         print()
         print("Маршрут " + routes[i] + " был обработан")
         print()
