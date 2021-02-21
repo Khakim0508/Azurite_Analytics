@@ -130,7 +130,6 @@ def construct_sample_report(data, cursor):
 
     graph = construct_graph(cursor)
 
-    detailed.to_excel("output_files/Detailed.xlsx")
     columns = ['Origin', 'Origin_Latitude', 'Origin_Longitude', 'Destination', 'Destination_Latitude', 'Destination_Longitude',
                'number_of_carriages', 'loaded_carriage', 'empty_carriage']
 
