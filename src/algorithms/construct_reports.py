@@ -244,7 +244,6 @@ def construct_report_by_route(data, cursor, route, state, dt, result):
     empty["Width"] = 5
     empty["carriage_state"] = 'Порожний'
     empty["cargo"] = 'Все'
-    empty.to_excel("output_files/" + "file_name2" + ".xlsx")
 
     all = pd.concat([loaded, empty], axis=0)
 
