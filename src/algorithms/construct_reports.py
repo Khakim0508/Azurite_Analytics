@@ -2,6 +2,7 @@ import math
 
 import pandas as pd
 import datetime
+from sqlalchemy import create_engine
 
 from src.algorithms.graph_algorithms import bfs
 from src.algorithms.graph_algorithms import construct_graph
@@ -18,7 +19,7 @@ def add_route(route, start_id, end_id, number_of_carrieges, cursor, loaded_df,
     # В метод попадает число вагонов представленных в виде числа с плавающей точкой
 
     cargo = cargo.strip()
-    # В переменную груза может попасть 12 пробелов и алгоритм будет считать что это груженые вагоны
+    # В переменную cargoа может попасть 12 пробелов и алгоритм будет считать что это loaded_carriageеные вагоны
 
     label = start + " - " + real_end + ": " + str(number_of_carrieges) + ", " + cargo + ", "
 
@@ -31,10 +32,8 @@ def add_route(route, start_id, end_id, number_of_carrieges, cursor, loaded_df,
 
     result = [loaded_df, empty_df]
 
-    tmp = real_end_id if start_id == end_id else end_id
-
     path = []
-    curr = tmp
+    curr = real_end_id if start_id == end_id else end_id
     while curr != start_id:
         path.append(curr)
         curr = route[curr]
@@ -44,6 +43,29 @@ def add_route(route, start_id, end_id, number_of_carrieges, cursor, loaded_df,
 
     cursor.execute("select name, country, latitude, longitude from stations where id = {}".format(start_id))
     point1 = cursor.fetchone()
+
+    if start_id == real_end_id:
+        cursor.execute(f"select b from routes where a = {start_id}")
+        if cursor.rowcount == 0:
+            return result
+        end_id = cursor.fetchone()[0]
+        cursor.execute("select name, country, latitude, longitude from stations where id = {}".format(end_id))
+        point2 = cursor.fetchone()
+        point2, point1 = point1, point2
+
+        result[0] = result[0].append({columns[0]: point1[0] + ", " + point1[1],
+                                      columns[1]: float(point1[2]), columns[2]: float(point1[3]),
+                                      columns[3]: point2[0] + ", " + point2[1], columns[4]: float(point2[2]),
+                                      columns[5]: float(point2[3]), columns[6]: number_of_carriages1,
+                                      columns[7]: loaded, columns[8]: ''}, ignore_index=True)
+
+        result[1] = result[1].append({columns[0]: point1[0] + ", " + point1[1],
+                                      columns[1]: float(point1[2]), columns[2]: float(point1[3]),
+                                      columns[3]: point2[0] + ", " + point2[1], columns[4]: float(point2[2]),
+                                      columns[5]: float(point2[3]), columns[6]: number_of_carriages2,
+                                      columns[7]: '', columns[8]: empty}, ignore_index=True)
+
+        return result
 
     if start_id == end_id:
         cursor.execute("select name, country, latitude, longitude from stations where id = {}".format(path[1]))
@@ -101,16 +123,16 @@ def add_route(route, start_id, end_id, number_of_carrieges, cursor, loaded_df,
 
 def construct_sample_report(data, cursor):
     data = data.fillna('')
-    detailed = data.groupby(['Станция отправления', 'Станция назначения', 'Станция текущей дислокации',
-                             'Груз'], sort=False)['Расстояние осталось (от текущей станции)'] \
+    detailed = data.groupby(['FromStationName', 'ToStationName', 'LastStationName',
+                             'CargoEtsngName'], sort=False)['RestDistance'] \
         .describe()[['count', 'mean']].reset_index()
     detailed = detailed.fillna('')
 
     graph = construct_graph(cursor)
 
     detailed.to_excel("output_files/Detailed.xlsx")
-    columns = ['Origin', 'Orig_Latitude', 'Orig_Longitude', 'Destination', 'Dest_Latitude', 'Dest_Longitude',
-               'Кол-во вагонов', 'ГРУЖ', 'ПОРОЖ']
+    columns = ['Origin', 'Origin_Latitude', 'Origin_Longitude', 'Destination', 'Destination_Latitude', 'Destination_Longitude',
+               'number_of_carriages', 'loaded_carriage', 'empty_carriage']
 
     loaded_df = pd.DataFrame.from_records([(0, 0, 0, 0, 0, 0, 0, 0, 0)], columns=columns)
     empty_df = pd.DataFrame.from_records([(0, 0, 0, 0, 0, 0, 0, 0, 0)], columns=columns)
@@ -125,14 +147,14 @@ def construct_sample_report(data, cursor):
     route = {}
     old_start_id = 0
     counter = 1
-    miss_carrieges = 0
+    miss_carriages = 0
     for ind, row in detailed.iterrows():
         try:
             start = row[0]
             real_end = row[1]
             end = row[2]
             cargo = row[3]
-            number_of_carrieges = row[4]
+            number_of_carriages = row[4]
             distance = row[5]
 
             cursor.execute("select id from stations where name = \'{}\'".format(start))
@@ -161,14 +183,14 @@ def construct_sample_report(data, cursor):
                     if bfs(graph, start_id, end_id):
                         if start_id != old_start_id:
                             route = dijikstra_graph(graph, start_id, end_id)
-                            result = add_route(route, start_id, end_id, number_of_carrieges,
+                            result = add_route(route, start_id, end_id, number_of_carriages,
                                                cursor, result[0], result[1],
                                                real_end_id, start, real_end, cargo, columns, distance)
                             old_start_id = start_id
                             print("А маршрут то поменялся " + str(counter) + " раз")
                             counter += 1
                         else:
-                            result = add_route(route, old_start_id, end_id, number_of_carrieges,
+                            result = add_route(route, old_start_id, end_id, number_of_carriages,
                                                cursor, result[0], result[1],
                                                real_end_id, start, real_end, cargo, columns, distance)
 
@@ -187,70 +209,71 @@ def construct_sample_report(data, cursor):
         except Exception:
             iteration += 1
             print("{} из {} маршрутов не был обработан".format(iteration, num_of_routes))
-            print("Маршрут {} - {}: {} : {} не был обработан".format(start, end, real_end, number_of_carrieges))
-            miss_carrieges += number_of_carrieges
+            print("Маршрут {} - {}: {} : {} не был обработан".format(start, end, real_end, number_of_carriages))
+            miss_carriages += number_of_carriages
 
             continue
 
-    print(miss_carrieges)
+    print(miss_carriages)
 
     return result
 
 
 
-def construct_report_by_route(data, cursor, file_name, sost, dt):
+def construct_report_by_route(data, cursor, route, state, dt, result):
+    if len(data) == 0:
+        return result
     tmp = construct_sample_report(data, cursor)
-    main_stations = ['Актогай', 'Балхаш I', 'Достык', 'Достык (эксп.)', 'Бозшаколь', 'Ахангаран', 'Ежевая']
 
     loaded = tmp[0]
 
-    loaded = loaded.fillna('').groupby(['Origin', 'Orig_Latitude', 'Orig_Longitude', 'Destination', 'Dest_Latitude',
-                                        'Dest_Longitude']).agg(
-        {'Кол-во вагонов': 'sum', 'ГРУЖ': ''.join, 'ПОРОЖ': ''.join})
+    loaded = loaded.fillna('').groupby(['Origin', 'Origin_Latitude', 'Origin_Longitude', 'Destination', 'Destination_Latitude',
+                                        'Destination_Longitude']).agg(
+        {'number_of_carriages': 'sum', 'loaded_carriage': ''.join, 'empty_carriage': ''.join})
 
     loaded["Color"] = 0
     loaded["Width"] = 5
-    loaded["Состояние"] = 'Груженый'
-    loaded["Груз"] = 'Все'
+    loaded["carriage_state"] = 'Груженый'
+    loaded["cargo"] = 'Все'
 
     empty = tmp[1]
-    empty = empty.fillna('').groupby(['Origin', 'Orig_Latitude', 'Orig_Longitude', 'Destination', 'Dest_Latitude',
-                                      'Dest_Longitude']).agg({'Кол-во вагонов': 'sum', 'ГРУЖ': ''.join, 'ПОРОЖ': ''.join})
+    empty = empty.fillna('').groupby(['Origin', 'Origin_Latitude', 'Origin_Longitude', 'Destination', 'Destination_Latitude',
+                                      'Destination_Longitude']).agg({'number_of_carriages': 'sum', 'loaded_carriage': ''.join, 'empty_carriage': ''.join})
 
     empty["Color"] = 0
     empty["Width"] = 5
-    empty["Состояние"] = 'Порожний'
-    empty["Груз"] = 'Все'
+    empty["carriage_state"] = 'Порожний'
+    empty["cargo"] = 'Все'
     empty.to_excel("output_files/" + "file_name2" + ".xlsx")
 
     all = pd.concat([loaded, empty], axis=0)
 
-    all = all.fillna('').groupby(['Origin', 'Orig_Latitude', 'Orig_Longitude', 'Destination', 'Dest_Latitude',
-                                  'Dest_Longitude']).agg({'Кол-во вагонов': 'sum', 'ГРУЖ': ''.join, 'ПОРОЖ': ''.join})
+    all = all.fillna('').groupby(['Origin', 'Origin_Latitude', 'Origin_Longitude', 'Destination', 'Destination_Latitude',
+                                  'Destination_Longitude']).agg({'number_of_carriages': 'sum', 'loaded_carriage': ''.join, 'empty_carriage': ''.join})
 
     all["Color"] = 0
     all["Width"] = 5
-    all["Состояние"] = 'Все'
-    all["Груз"] = 'Все'
+    all["carriage_state"] = 'Все'
+    all["cargo"] = 'Все'
 
-    if (int(sum(loaded['Кол-во вагонов'])) != 0):
-        for cargo in data["Груз"].unique():
+    if (int(sum(loaded['number_of_carriages'])) != 0):
+        for cargo in data["CargoEtsngName"].unique():
             try:
                 if len(str(cargo).strip()) != 0:
-                    df = data.loc[data['Груз'] == cargo]
+                    df = data.loc[data['CargoEtsngName'] == cargo]
 
                     tmp = construct_sample_report(df, cursor)
                     tmp_loaded = tmp[0]
 
                     tmp_loaded = tmp_loaded.fillna('').groupby(
-                        ['Origin', 'Orig_Latitude', 'Orig_Longitude', 'Destination', 'Dest_Latitude',
-                         'Dest_Longitude']).agg(
-                        {'Кол-во вагонов': 'sum', 'ГРУЖ': ''.join, 'ПОРОЖ': ''.join})
+                        ['Origin', 'Origin_Latitude', 'Origin_Longitude', 'Destination', 'Destination_Latitude',
+                         'Destination_Longitude']).agg(
+                        {'number_of_carriages': 'sum', 'loaded_carriage': ''.join, 'empty_carriage': ''.join})
 
                     tmp_loaded["Color"] = 0
                     tmp_loaded["Width"] = 5
-                    tmp_loaded["Состояние"] = 'Груженый'
-                    tmp_loaded["Груз"] = cargo
+                    tmp_loaded["carriage_state"] = 'Порожний'
+                    tmp_loaded["cargo"] = cargo
 
                     loaded = pd.concat([loaded, tmp_loaded], axis=0)
 
@@ -259,16 +282,16 @@ def construct_report_by_route(data, cursor, file_name, sost, dt):
                 continue
 
     for row in range(len(loaded)):
-        if loaded["Кол-во вагонов"][row] != 0:
+        if loaded["number_of_carriages"][row] != 0:
             loaded["Color"][row] = 100
             loaded["Width"][row] = 20
 
     for row in range(len(empty)):
-        if empty["Кол-во вагонов"][row] != 0:
+        if empty["number_of_carriages"][row] != 0:
             empty["Color"][row] = 100
             empty["Width"][row] = 20
-        if all["Кол-во вагонов"][row] != 0:
-            if all["ГРУЖ"][row].strip() == "":
+        if all["number_of_carriages"][row] != 0:
+            if all["loaded_carriage"][row].strip() == "":
                 all["Color"][row] = 100
             else:
                 all["Color"][row] = 300
@@ -281,19 +304,50 @@ def construct_report_by_route(data, cursor, file_name, sost, dt):
 
     loaded = pd.concat([tmp, all], axis=0)
 
-    if sost == 1:
+    if state == 1:
         pass
     else:
-        loaded = loaded[loaded["Кол-во вагонов"] != 0]
+        loaded = loaded[loaded["number_of_carriages"] != 0]
 
-    loaded["Date"] = dt
+    loaded["route"] = route
+    loaded["update_datetime"] = dt
 
-    loaded.reset_index().to_excel("output_files/" + file_name + ".xlsx")
+    if result is None:
+        result = loaded
+    else:
+        result = pd.concat([result, loaded], axis=0)
+
+    return result
 
 
-def construct_report(file_name, cursor):
-    data = pd.read_excel(file_name)
+def commit_to_db(conn, cursor, table_name, df):
+    cursor.execute(f"delete from {table_name}")
+    cols = ", ".join([str(i) for i in df.keys()])
+
+    for i, row in df.iterrows():
+        sql = "INSERT INTO " + table_name + " (" + cols + ") VALUES (" + "%s," * (len(row) - 1) + "%s)"
+        cursor.execute(sql, tuple(row))
+
+        # the connection is not autocommitted by default, so we must commit to save our changes
+        conn.commit()
+
+def construct_report(conn, cursor):
+    server = '3.10.162.120,1433'
+    database = 'AZR'
+    username = 'AnalyticsUser'
+    password = 'WNOylkgb6F2ZudrCs3tU'
+
+    engine = create_engine(f'mssql+pyodbc://{username}:{password}@{server}/{database}?driver=SQL+Server')
+
+    sh = engine.execute("SELECT * FROM Local.CarLocation")
+
+    data = pd.DataFrame(data=sh, columns=sh.keys())
+
+    commit_to_db(conn, cursor, "dislocation", data)
+
     dt = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
+    result = None
+
     stations = [
         ['Актогай', 'Балхаш I'],
         ['Балхаш I', 'Достык', 'Достык (эксп.)'],
@@ -312,16 +366,18 @@ def construct_report(file_name, cursor):
         'Бозшаколь - Ежевая'
     ]
 
-    construct_report_by_route(data, cursor, 'Общая карта', 0, dt)
-
-
+    result = construct_report_by_route(data, cursor, 'Общая карта', 0, dt, result)
 
     for i in range(len(stations)):
-        df = data.loc[data['Станция отправления'].isin(stations[i]) & data['Станция назначения'].isin(stations[i])]
-        df = df.loc[0:, ['Станция отправления', 'Станция назначения', 'Станция текущей дислокации',
-                         'Груз', 'Расстояние осталось (от текущей станции)']]
+        df = data.loc[data['FromStationName'].isin(stations[i]) & data['ToStationName'].isin(stations[i])]
+        df = df.loc[0:, ['FromStationName', 'ToStationName', 'LastStationName',
+                         'CargoEtsngName', 'RestDistance']]
 
-        construct_report_by_route(df, cursor, routes[i], 1, dt)
+        result = construct_report_by_route(df, cursor, routes[i], 1, dt, result)
+
         print()
         print("Маршрут " + routes[i] + " был обработан")
         print()
+
+    result = result.reset_index()
+    commit_to_db(conn, cursor, "report", result)

@@ -6,7 +6,4 @@ if __name__ == "__main__":
                             password='root', host='localhost')
     cursor = conn.cursor()
 
-
-    file_name = "dislocation/Dislocation_2021-02-02_08-00-01_15.xls"
-
-    construct_report(file_name, cursor)
+    construct_report(conn, cursor)
