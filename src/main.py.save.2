@@ -1,0 +1,13 @@
+import psycopg2
+import schedule
+import time
+from algorithms.construct_reports import construct_report
+
+def job():
+    conn = psycopg2.connect(dbname='flow_map', user='postgres',
+                            password='root', host='localhost')
+    cursor = conn.cursor()
+    construct_report(conn, cursor)
+
+
+if __name__ == "__

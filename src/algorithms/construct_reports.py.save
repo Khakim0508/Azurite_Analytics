@@ -3,7 +3,6 @@ import math
 import pandas as pd
 import datetime
 from sqlalchemy import create_engine
-import psycopg2
 
 from algorithms.graph_algorithms import bfs
 from algorithms.graph_algorithms import construct_graph
@@ -201,14 +200,10 @@ def construct_sample_report(data, cursor):
                     raise Exception
 
                 iteration += 1
+                print("{} из {} маршрутов было обработано".format(iteration, num_of_routes))
 
             else:
                 raise Exception
-
-        except psycopg2.InterfaceError:
-            conn = psycopg2.connect(dbname='flow_map', user='postgres',
-                                        password='root', host='localhost')
-            cursor = conn.cursor()
 
         except Exception:
             iteration += 1
@@ -280,11 +275,6 @@ def construct_report_by_route(data, cursor, route, state, dt, result):
 
                     loaded = pd.concat([loaded, tmp_loaded], axis=0)
 
-            except psycopg2.InterfaceError:
-                conn = psycopg2.connect(dbname='flow_map', user='postgres',
-                                        password='root', host='localhost')
-                cursor = conn.cursor()
-
             except Exception:
                 print("Something went wrong with cargo ")
                 continue
@@ -311,15 +301,16 @@ def construct_report_by_route(data, cursor, route, state, dt, result):
     tmp = pd.concat([loaded, empty], axis=0)
 
     loaded = pd.concat([tmp, all], axis=0)
+
     loaded["route"] = route
     loaded["update_datetime"] = dt
 
-    df = loaded[loaded["number_of_carriages"] != 0]
+    without_route = loaded[loaded["number_of_carriages"] != 0]
 
-    df["with_route"] = "Без маршрута"
+    without_route["with_route"] = "Без маршрута"
     loaded["with_route"] = "С маршрутом"
-    
-    loaded = pd.concat([df, loaded], axis=0)
+
+    loaded = pd.concat([without_route, loaded], axis=0)
 
     if result is None:
         result = loaded
@@ -330,6 +321,7 @@ def construct_report_by_route(data, cursor, route, state, dt, result):
 
 
 def commit_to_db(conn, cursor, table_name, df):
+    cursor.execute(f"delete from {table_name}")
     cols = ", ".join([str(i) for i in df.keys()])
 
     for i, row in df.iterrows():
@@ -340,8 +332,7 @@ def commit_to_db(conn, cursor, table_name, df):
             # the connection is not autocommitted by default, so we must commit to save our changes
             conn.commit()
         except Exception:
-            sql = "INSERT INTO " + table_name + " (" + cols + ") VALUES (" + "%s," * (len(row) - 1) + "%s)"
-            print("Не идёт коммит в дб")
+            print("qwe")
 
 def construct_report(conn, cursor):
     server = '3.10.162.120,1433'
@@ -362,13 +353,9 @@ def construct_report(conn, cursor):
     data["ShippingDate"] = data["ShippingDate"].replace({pd.NaT: None})
     data["LastOperationDate"] = data["LastOperationDate"].replace({pd.NaT: None})
 
-    data["update_datetime"] = dt
-    data['RestRun'] = data['RestRun'].fillna(0)
     commit_to_db(conn, cursor, "dislocation", data)
 
     result = None
-
-    all_stations = ['Усть-Таловка', 'Неверовская', 'Балхаш I', 'Бозшаколь', 'Актогай']
 
     stations = [
         ['Усть-Таловка', 'Неверовская'],
@@ -384,8 +371,7 @@ def construct_report(conn, cursor):
         'КАЛ',
     ]
 
-    df = data.loc[data['FromStationName'].isin(all_stations) | data['ToStationName'].isin(all_stations)]
-    result = construct_report_by_route(df, cursor, 'Общая карта', 0, dt, result)
+    result = construct_report_by_route(data, cursor, 'Общая карта', 0, dt, result)
 
     for i in range(len(stations)):
         df = data.loc[data['FromStationName'].isin(stations[i]) | data['ToStationName'].isin(stations[i])]
@@ -400,16 +386,3 @@ def construct_report(conn, cursor):
 
     result = result.reset_index()
     commit_to_db(conn, cursor, "report", result)
-
-def delete_trash(cursor, conn):
-    dt = datetime.datetime.now()
-    cursor.execute(f"delete "
-                   f"from report "
-                   f"where update_datetime >= timestamp '{dt.year}-{dt.month}-{dt.day} 00:00:00' "
-                   f"and update_datetime < timestamp '{dt.year}-{dt.month}-{dt.day} 16:30:00';")
-    cursor.execute(f"delete "
-                   f"from dislocation "
-                   f"where update_datetime >= timestamp '{dt.year}-{dt.month}-{dt.day} 00:00:00' "
-                   f"and update_datetime < timestamp '{dt.year}-{dt.month}-{dt.day} 16:30:00';")
-
-    conn.commit()
