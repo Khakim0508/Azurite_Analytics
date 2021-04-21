@@ -41,10 +41,12 @@ def connect_two_stations(cursor, conn, node1, node2):
     distance = haversine(lat1, lon1, lat2, lon2)
     print('insert into routes (a, b, distance)'
           ' values({}, {}, {});'.format(stan1, stan2, distance))
+    print('insert into routes (a, b, distance)'
+                   ' values({}, {}, {});'.format(stan2, stan1, distance))
     cursor.execute('insert into routes (a, b, distance)'
                    ' values({}, {}, {});'.format(stan1, stan2, distance))
     cursor.execute('insert into routes (a, b, distance)'
                    ' values({}, {}, {});'.format(stan2, stan1, distance))
     conn.commit()
 
-#connect_two_stations(cursor, conn, "Разъезд № 22", "Кошкентал")
+connect_two_stations(cursor, conn, "Павлодар", "Павлодар-южный")

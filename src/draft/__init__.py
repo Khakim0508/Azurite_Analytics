@@ -17,22 +17,3 @@ sh = cursor.fetchall()
 
 cursor.execute("SELECT * from Local.CarLocation where "
                "CargoEtsngName <> ''")
-det = cursor.fetchone()
-
-for i in range(len(sh)):
-    print(sh[i][0] + ": " + str(det[i]) + " "
-          + str(type(det[i])))
-
-cursor.execute("select COLUMN_NAME, DATA_TYPE, CHARACTER_MAXIMUM_LENGTH, "
-               "NUMERIC_PRECISION, DATETIME_PRECISION, IS_NULLABLE "
-               "from INFORMATION_SCHEMA.COLUMNS where TABLE_NAME='CarLocation'")
-
-sh = cursor.fetchall()
-
-cursor.execute("SELECT * from Local.CarLocation where "
-               "CargoEtsngName <> ''")
-det = cursor.fetchone()
-
-for i in range(len(sh)):
-    print(str(sh[i]) + ": " + str(det[i]) + " "
-          + str(type(det[i])))

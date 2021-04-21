@@ -1,27 +1,17 @@
 import pandas as pd
 import psycopg2
+import datetime
 
-conn = psycopg2.connect(dbname='flow_map', user='postgres',
-                            password='root', host='localhost')
-cursor = conn.cursor()
+def delete_trash():
+    dt = datetime.datetime.now()
 
-df = pd.read_excel("Dislocation_2021-02-02_08-00-01_15.xls", converters={'Дата и время отправления': pd.to_datetime})
-# df["span_id"] = 0
-# df["span_id"].loc[(df['Станция отправления'] == "Бозшаколь") & (df['Станция назначения'] == "Достык")] = 1
-# df["Дата и время отправления"] = str(df["Дата и время отправления"])
+    print(f"delete "
+                   f"from report "
+                   f"where update_datetime >= timestamp '{dt.year}-{dt.month}-{dt.day} 00:00:00' "
+                   f"and update_datetime < timestamp '{dt.year}-{dt.month}-{dt.day} 16:30:00';")
+    print(f"delete "
+                   f"from dislocation "
+                   f"where update_datetime >= timestamp '{dt.year}-{dt.month}-{dt.day} 00:00:00' "
+                   f"and update_datetime < timestamp '{dt.year}-{dt.month}-{dt.day} 16:30:00'; ")
 
-writer = pd.ExcelWriter("check.xlsx",
-                        engine='xlsxwriter',
-                        datetime_format='d/m/yyyy hh:mm',
-                        date_format='d/m/yyyy')
-
-# Convert the dataframe to an XlsxWriter Excel object.
-df.to_excel(writer, sheet_name='Sheep1')
-
-workbook = writer.book
-worksheet = writer.sheets['Sheep1']
-
-worksheet.set_column('B:AD', 20)
-
-# Close the Pandas Excel writer and output the Excel file.
-writer.save()
+delete_trash()

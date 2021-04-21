@@ -1,53 +1,19 @@
+import psycopg2
 import pandas as pd
-from datetime import datetime, date
+import datetime
 
-# Create a Pandas dataframe from some datetime data.
-df = pd.DataFrame({'Date and time': [datetime(2015, 1, 1, 11, 30, 55),
-                                     datetime(2015, 10, 2, 1,  20, 33),
-                                     datetime(2015, 1, 22, 11, 10),
-                                     datetime(2015, 1, 4, 16, 45, 35),
-                                     datetime(2015, 1, 5, 12, 10, 15)],
-                   'Dates only':    [date(2015, 2, 1),
-                                     date(2015, 2, 2),
-                                     date(2015, 2, 3),
-                                     date(2015, 2, 4),
-                                     date(2015, 2, 5)],
-                   'Dates onlyy': [date(2015, 2, 1),
-                                  date(2015, 2, 2),
-                                  date(2015, 2, 3),
-                                  date(2015, 2, 4),
-                                  date(2015, 2, 5)],
+conn = psycopg2.connect(dbname='flow_map', user='postgres',
+                        password='root', host='localhost')
+cursor = conn.cursor()
 
-                   'Date and timee': [datetime(2015, 1, 1, 11, 30, 55),
-                                     datetime(2015, 10, 2, 1, 20, 33),
-                                     datetime(2015, 1, 22, 11, 10),
-                                     datetime(2015, 1, 4, 16, 45, 35),
-                                     datetime(2015, 1, 5, 12, 10, 15)],
+dt = datetime.datetime.now()
 
-                   'Date and times': [datetime(2015, 1, 1, 11, 30, 55),
-                                     datetime(2015, 10, 2, 1, 20, 33),
-                                     datetime(2015, 1, 22, 11, 10),
-                                     datetime(2015, 1, 4, 16, 45, 35),
-                                     datetime(2015, 1, 5, 12, 10, 15)],
+cursor.execute(f"delete"
+               f"from report"
+               f"where update_datetime >= timestamp '{dt.year}-{dt.month}-{dt.day} 00:00:00'"
+               f"and update_datetime < timestamp '{dt.year}-{dt.month}-{dt.day} 16:30:00';")
+cursor.execute(f"delete"
+               f"from dislocation"
+               f"where update_datetime >= timestamp '{dt.year}-{dt.month}-{dt.day} 00:00:00'"
+               f"and update_datetime < timestamp '{dt.year}-{dt.month}-{dt.day} 16:30:00';")
 
-                   })
-
-# Create a Pandas Excel writer using XlsxWriter as the engine.
-# Also set the default datetime and date formats.
-writer = pd.ExcelWriter("pandas_datetime.xlsx",
-                        engine='xlsxwriter',
-                        datetime_format='d/m/yyyy hh:mm',
-                        date_format='d/m/yyyy')
-
-# Convert the dataframe to an XlsxWriter Excel object.
-df.to_excel(writer, sheet_name='Sheep1')
-
-# Get the xlsxwriter workbook and worksheet objects in order to set the column
-# widths, to make the dates clearer.
-workbook = writer.book
-worksheet = writer.sheets['Sheep1']
-
-worksheet.set_column('B:F', 20)
-
-# Close the Pandas Excel writer and output the Excel file.
-writer.save()
