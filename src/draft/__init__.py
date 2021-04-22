@@ -7,7 +7,7 @@ server = '3.10.162.120,1433'
 database = 'AZR'
 username = 'AnalyticsUser'
 password = 'WNOylkgb6F2ZudrCs3tU'
-cnxn = pyodbc.connect('DRIVER={SQL Server};SERVER='+server+';DATABASE='+database+';UID='+username+';PWD='+ password)
+cnxn = pyodbc.connect('DRIVER={FreeTDS};SERVER='+server+';DATABASE='+database+';UID='+username+';PWD='+ password)
 cursor = cnxn.cursor()
 
 
@@ -17,3 +17,9 @@ sh = cursor.fetchall()
 
 cursor.execute("SELECT * from Local.CarLocation where "
                "CargoEtsngName <> ''")
+det = cursor.fetchone()
+
+for i in range(len(sh)):
+    print(sh[i][0] + ": " + str(det[i]) + " "
+          + str(type(det[i])))
+
