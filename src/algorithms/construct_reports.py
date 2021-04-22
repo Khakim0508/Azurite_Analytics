@@ -1,12 +1,9 @@
 import math
-
 import pandas as pd
 import datetime
 from sqlalchemy import create_engine
 
-from algorithms.graph_algorithms import bfs
-from algorithms.graph_algorithms import construct_graph
-from algorithms.graph_algorithms import dijikstra_graph
+pd.options.mode.chained_assignment = None
 
 
 def add_route(route, start_id, end_id, number_of_carrieges, cursor, loaded_df,
@@ -19,7 +16,7 @@ def add_route(route, start_id, end_id, number_of_carrieges, cursor, loaded_df,
     # В метод попадает число вагонов представленных в виде числа с плавающей точкой
 
     cargo = cargo.strip()
-    # В переменную cargoа может попасть 12 пробелов и алгоритм будет считать что это loaded_carriageеные вагоны
+    # В переменную cargo может попасть 12 пробелов и алгоритм будет считать что это loaded_carriage
 
     label = start + " - " + real_end + ": " + str(number_of_carrieges) + ", " + cargo + ", "
 
@@ -187,7 +184,6 @@ def construct_sample_report(data, cursor):
                                                cursor, result[0], result[1],
                                                real_end_id, start, real_end, cargo, columns, distance)
                             old_start_id = start_id
-                            print("А маршрут то поменялся " + str(counter) + " раз")
                             counter += 1
                         else:
                             result = add_route(route, old_start_id, end_id, number_of_carriages,
@@ -201,7 +197,7 @@ def construct_sample_report(data, cursor):
                     raise Exception
 
                 iteration += 1
-                print("{} из {} маршрутов было обработано".format(iteration, num_of_routes))
+
 
             else:
                 raise Exception
@@ -334,7 +330,7 @@ def commit_to_db(conn, cursor, table_name, df):
             # the connection is not autocommitted by default, so we must commit to save our changes
             conn.commit()
         except Exception:
-            print("qwe")
+            print("Commit to DB fail")
 
 
 def construct_report(conn, cursor):
