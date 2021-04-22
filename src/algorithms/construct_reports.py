@@ -324,7 +324,6 @@ def construct_report_by_route(data, cursor, route, state, dt, result):
 
 
 def commit_to_db(conn, cursor, table_name, df):
-    cursor.execute(f"delete from {table_name}")
     cols = ", ".join([str(i) for i in df.keys()])
 
     for i, row in df.iterrows():
