@@ -3,11 +3,10 @@ import math
 import pandas as pd
 import datetime
 from sqlalchemy import create_engine
-import psycopg2
 
-from src.algorithms.graph_algorithms import bfs
-from src.algorithms.graph_algorithms import construct_graph
-from src.algorithms.graph_algorithms import dijikstra_graph
+from algorithms.graph_algorithms import bfs
+from algorithms.graph_algorithms import construct_graph
+from algorithms.graph_algorithms import dijikstra_graph
 
 
 def add_route(route, start_id, end_id, number_of_carrieges, cursor, loaded_df,
@@ -20,7 +19,7 @@ def add_route(route, start_id, end_id, number_of_carrieges, cursor, loaded_df,
     # В метод попадает число вагонов представленных в виде числа с плавающей точкой
 
     cargo = cargo.strip()
-    # В переменную cargo может попасть 12 пробелов и алгоритм будет считать что это loaded_carriageеные вагоны
+    # В переменную cargoа может попасть 12 пробелов и алгоритм будет считать что это loaded_carriageеные вагоны
 
     label = start + " - " + real_end + ": " + str(number_of_carrieges) + ", " + cargo + ", "
 
@@ -131,7 +130,8 @@ def construct_sample_report(data, cursor):
 
     graph = construct_graph(cursor)
 
-    columns = ['Origin', 'Origin_Latitude', 'Origin_Longitude', 'Destination', 'Destination_Latitude', 'Destination_Longitude',
+    columns = ['Origin', 'Origin_Latitude', 'Origin_Longitude', 'Destination', 'Destination_Latitude',
+               'Destination_Longitude',
                'number_of_carriages', 'loaded_carriage', 'empty_carriage']
 
     loaded_df = pd.DataFrame.from_records([(0, 0, 0, 0, 0, 0, 0, 0, 0)], columns=columns)
@@ -206,10 +206,6 @@ def construct_sample_report(data, cursor):
             else:
                 raise Exception
 
-        except psycopg2.InterfaceError:
-            conn = psycopg2.connect(dbname='flow_map', user='postgres',
-                                    password='root', host='localhost')
-            cursor = conn.cursor()
         except Exception:
             iteration += 1
             print("{} из {} маршрутов не был обработан".format(iteration, num_of_routes))
@@ -223,7 +219,6 @@ def construct_sample_report(data, cursor):
     return result
 
 
-
 def construct_report_by_route(data, cursor, route, state, dt, result):
     if len(data) == 0:
         return result
@@ -231,8 +226,9 @@ def construct_report_by_route(data, cursor, route, state, dt, result):
 
     loaded = tmp[0]
 
-    loaded = loaded.fillna('').groupby(['Origin', 'Origin_Latitude', 'Origin_Longitude', 'Destination', 'Destination_Latitude',
-                                        'Destination_Longitude']).agg(
+    loaded = loaded.fillna('').groupby(
+        ['Origin', 'Origin_Latitude', 'Origin_Longitude', 'Destination', 'Destination_Latitude',
+         'Destination_Longitude']).agg(
         {'number_of_carriages': 'sum', 'loaded_carriage': ''.join, 'empty_carriage': ''.join})
 
     loaded["Color"] = 0
@@ -241,8 +237,10 @@ def construct_report_by_route(data, cursor, route, state, dt, result):
     loaded["cargo"] = 'Все'
 
     empty = tmp[1]
-    empty = empty.fillna('').groupby(['Origin', 'Origin_Latitude', 'Origin_Longitude', 'Destination', 'Destination_Latitude',
-                                      'Destination_Longitude']).agg({'number_of_carriages': 'sum', 'loaded_carriage': ''.join, 'empty_carriage': ''.join})
+    empty = empty.fillna('').groupby(
+        ['Origin', 'Origin_Latitude', 'Origin_Longitude', 'Destination', 'Destination_Latitude',
+         'Destination_Longitude']).agg(
+        {'number_of_carriages': 'sum', 'loaded_carriage': ''.join, 'empty_carriage': ''.join})
 
     empty["Color"] = 0
     empty["Width"] = 5
@@ -251,8 +249,10 @@ def construct_report_by_route(data, cursor, route, state, dt, result):
 
     all = pd.concat([loaded, empty], axis=0)
 
-    all = all.fillna('').groupby(['Origin', 'Origin_Latitude', 'Origin_Longitude', 'Destination', 'Destination_Latitude',
-                                  'Destination_Longitude']).agg({'number_of_carriages': 'sum', 'loaded_carriage': ''.join, 'empty_carriage': ''.join})
+    all = all.fillna('').groupby(
+        ['Origin', 'Origin_Latitude', 'Origin_Longitude', 'Destination', 'Destination_Latitude',
+         'Destination_Longitude']).agg(
+        {'number_of_carriages': 'sum', 'loaded_carriage': ''.join, 'empty_carriage': ''.join})
 
     all["Color"] = 0
     all["Width"] = 5
@@ -280,11 +280,6 @@ def construct_report_by_route(data, cursor, route, state, dt, result):
 
                     loaded = pd.concat([loaded, tmp_loaded], axis=0)
 
-            except psycopg2.InterfaceError:
-                conn = psycopg2.connect(dbname='flow_map', user='postgres',
-                                        password='root', host='localhost')
-                cursor = conn.cursor()
-
             except Exception:
                 print("Something went wrong with cargo ")
                 continue
@@ -306,8 +301,6 @@ def construct_report_by_route(data, cursor, route, state, dt, result):
 
             all["Width"][row] = 20
 
-
-
     tmp = pd.concat([loaded, empty], axis=0)
 
     loaded = pd.concat([tmp, all], axis=0)
@@ -315,12 +308,12 @@ def construct_report_by_route(data, cursor, route, state, dt, result):
     loaded["route"] = route
     loaded["update_datetime"] = dt
 
-    df = loaded[loaded["number_of_carriages"] != 0]
+    without_route = loaded[loaded["number_of_carriages"] != 0]
 
-    df["with_route"] = "Без маршрута"
+    without_route["with_route"] = "Без маршрута"
     loaded["with_route"] = "С маршрутом"
 
-    loaded = pd.concat([df, loaded], axis=0)
+    loaded = pd.concat([without_route, loaded], axis=0)
 
     if result is None:
         result = loaded
@@ -335,11 +328,15 @@ def commit_to_db(conn, cursor, table_name, df):
     cols = ", ".join([str(i) for i in df.keys()])
 
     for i, row in df.iterrows():
-        sql = "INSERT INTO " + table_name + " (" + cols + ") VALUES (" + "%s," * (len(row) - 1) + "%s)"
-        cursor.execute(sql, tuple(row))
+        try:
+            sql = "INSERT INTO " + table_name + " (" + cols + ") VALUES (" + "%s," * (len(row) - 1) + "%s)"
+            cursor.execute(sql, tuple(row))
 
-        # the connection is not autocommitted by default, so we must commit to save our changes
-        conn.commit()
+            # the connection is not autocommitted by default, so we must commit to save our changes
+            conn.commit()
+        except Exception:
+            print("qwe")
+
 
 def construct_report(conn, cursor):
     server = '3.10.162.120,1433'
@@ -347,33 +344,21 @@ def construct_report(conn, cursor):
     username = 'AnalyticsUser'
     password = 'WNOylkgb6F2ZudrCs3tU'
 
-    engine = create_engine(f'mssql+pyodbc://{username}:{password}@{server}/{database}?driver=SQL+Server')
+    engine = create_engine(f'mssql+pyodbc://{username}:{password}@{server}/{database}?driver=FreeTds')
 
-    sh = engine.execute("SELECT * FROM Local.CarLocation where fromstationname IS NOT NULL AND tostationname IS NOT NULL AND laststationname IS NOT NULL;")
+    sh = engine.execute(
+        "SELECT * FROM Local.CarLocation where fromstationname IS NOT NULL AND tostationname IS NOT NULL AND laststationname IS NOT NULL AND cargoweight IS NOT NULL")
     dt = datetime.datetime.now()
     hours_added = datetime.timedelta(hours=7)
     mins = datetime.timedelta(minutes=dt.minute, seconds=dt.second)
     dt = dt + hours_added - mins
     dt = dt.strftime("%Y-%m-%d %H:%M")
-
-    all_stations = ['Усть-Таловка', 'Неверовская', 'Балхаш I', 'Бозшаколь', 'Актогай']
     data = pd.DataFrame(data=sh, columns=sh.keys())
     data["CargoEtsngName"] = data["CargoEtsngName"].fillna('')
     data["ShippingDate"] = data["ShippingDate"].replace({pd.NaT: None})
     data["LastOperationDate"] = data["LastOperationDate"].replace({pd.NaT: None})
-    data = data.loc[data['FromStationName'].isin(all_stations) | data['ToStationName'].isin(all_stations)]
-
-    detailed = data.groupby(['FromStationName', 'ToStationName', 'LastStationName',
-                             'CargoEtsngName'], sort=False)['RestDistance'] \
-        .describe()[['count', 'mean']].reset_index()
-    detailed = detailed.fillna('')
-    detailed.to_excel("output_files/Detailed.xlsx")
-    data.to_excel("output_files/dislocation.xlsx")
-
-    data["update_datetime"] = dt
 
     commit_to_db(conn, cursor, "dislocation", data)
-
 
     result = None
 
@@ -391,10 +376,9 @@ def construct_report(conn, cursor):
         'КАЛ',
     ]
 
-
     result = construct_report_by_route(data, cursor, 'Общая карта', 0, dt, result)
 
-    for i in range(0):
+    for i in range(len(stations)):
         df = data.loc[data['FromStationName'].isin(stations[i]) | data['ToStationName'].isin(stations[i])]
         df = df.loc[0:, ['FromStationName', 'ToStationName', 'LastStationName',
                          'CargoEtsngName', 'RestDistance']]
@@ -406,18 +390,4 @@ def construct_report(conn, cursor):
         print()
 
     result = result.reset_index()
-    result.to_excel("output_files/res.xlsx")
     commit_to_db(conn, cursor, "report", result)
-
-def delete_trash(cursor, conn):
-    dt = datetime.datetime.now()
-
-    cursor.execute(f"delete "
-                   f"from report "
-                   f"where update_datetime >= timestamp '{dt.year}-{dt.month}-{dt.day} 00:00:00' "
-                   f"and update_datetime < timestamp '{dt.year}-{dt.month}-{dt.day} 16:30:00';")
-    cursor.execute(f"delete"
-                   f"from dislocation"
-                   f"where update_datetime >= timestamp '{dt.year}-{dt.month}-{dt.day} 00:00:00' "
-                   f"and update_datetime < timestamp '{dt.year}-{dt.month}-{dt.day} 16:30:00'; ")
-    conn.commit()

@@ -4,6 +4,7 @@ import time
 import datetime
 from algorithms.construct_reports import construct_report
 from algorithms.construct_reports import delete_trash
+
 def job():
     conn = psycopg2.connect(dbname='flow_map', user='postgres',
                             password='root', host='localhost')

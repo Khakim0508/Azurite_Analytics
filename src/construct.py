@@ -1,4 +1,5 @@
 import psycopg2
+
 from algorithms.construct_reports import construct_report
 
 if __name__ == "__main__":
