@@ -9,26 +9,26 @@ from sqlalchemy import create_engine
 pd.options.mode.chained_assignment = None
 
 
-def add_route(route, start_id, end_id, number_of_carrieges, cursor, loaded_df,
+def add_route(route, start_id, end_id, number_of_carriages, cursor, loaded_df,
               empty_df, real_end_id, start, real_end, cargo, columns, distance):
     loaded = ''
     empty = ''
     number_of_carriages1 = number_of_carriages2 = 0
 
-    number_of_carrieges = int(number_of_carrieges)
+    number_of_carriages = int(number_of_carriages)
     # В метод попадает число вагонов представленных в виде числа с плавающей точкой
 
     cargo = cargo.strip()
     # В переменную cargo может попасть 12 пробелов и алгоритм будет считать что это loaded_carriage
 
-    label = start + " - " + real_end + ": " + str(number_of_carrieges) + ", " + cargo + ", "
+    label = start + " - " + real_end + ": " + str(number_of_carriages) + ", " + cargo + ", "
 
     if cargo != '':
         loaded = label + str(math.ceil(distance / 200)) + ' дн.;'
-        number_of_carriages1 = number_of_carrieges
+        number_of_carriages1 = number_of_carriages
     else:
         empty = label + str(math.ceil(distance / 330)) + ' дн.;'
-        number_of_carriages2 = number_of_carrieges
+        number_of_carriages2 = number_of_carriages
 
     result = [loaded_df, empty_df]
 
