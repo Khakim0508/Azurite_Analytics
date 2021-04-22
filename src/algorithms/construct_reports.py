@@ -357,9 +357,14 @@ def construct_report(conn, cursor):
     data["ShippingDate"] = data["ShippingDate"].replace({pd.NaT: None})
     data["LastOperationDate"] = data["LastOperationDate"].replace({pd.NaT: None})
 
+    data["update_datetime"] = dt
+    data['RestRun'] = data['RestRun'].fillna(0)
     commit_to_db(conn, cursor, "dislocation", data)
 
     result = None
+
+    all_stations = ['Усть-Таловка', 'Неверовская', 'Балхаш I', 'Бозшаколь', 'Актогай']
+
 
     stations = [
         ['Усть-Таловка', 'Неверовская'],
