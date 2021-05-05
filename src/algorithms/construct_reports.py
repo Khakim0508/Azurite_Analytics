@@ -1,6 +1,7 @@
 import math
 import pandas as pd
 import datetime
+import psycopg2
 from algorithms.graph_algorithms import bfs
 from algorithms.graph_algorithms import construct_graph
 from algorithms.graph_algorithms import dijikstra_graph
