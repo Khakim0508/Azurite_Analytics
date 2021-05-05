@@ -209,6 +209,9 @@ def construct_sample_report(data, cursor):
             iteration += 1
             print("{} из {} маршрутов не был обработан".format(iteration, num_of_routes))
             print("Маршрут {} - {}: {} : {} не был обработан".format(start, end, real_end, number_of_carriages))
+            conn = psycopg2.connect(dbname='flow_map', user='postgres',
+                                    password='root', host='localhost')
+            cursor = conn.cursor()
             miss_carriages += number_of_carriages
 
             continue
@@ -280,6 +283,9 @@ def construct_report_by_route(data, cursor, route, state, dt, result):
                     loaded = pd.concat([loaded, tmp_loaded], axis=0)
 
             except Exception:
+                conn = psycopg2.connect(dbname='flow_map', user='postgres',
+                                        password='root', host='localhost')
+                cursor = conn.cursor()
                 print("Something went wrong with cargo ")
                 continue
 

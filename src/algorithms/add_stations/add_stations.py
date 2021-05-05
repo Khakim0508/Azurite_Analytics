@@ -33,4 +33,4 @@ def add_stations():
             print(j)
             j+=1
 
-#   add_stations()
+add_stations()

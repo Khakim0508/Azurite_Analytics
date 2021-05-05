@@ -1,7 +1,6 @@
 from collections import deque
 
 
-
 def construct_graph(cursor):
     cursor.execute("rollback;")
     cursor.execute("Select id from Stations;")

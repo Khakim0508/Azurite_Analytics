@@ -91,13 +91,18 @@ def insert_routes(stat1, stat3, list_stat):
         cursor2.execute("ROLLBACK")
 
 
-list_stat = []
+list_stat = [
+    "Разъезд № 7"
+]
 stations = pd.read_excel("Stations.xlsx")
 for i, row in stations.iterrows():
     if row["State"] == 0:
         list_stat.append(row["Station"])
 print(len(list_stat))
-#insert_routes("Шарташ", "Елимай (обп) (эксп.)", list_stat)
+#insert_routes("Шар", "Суэрлы", list_stat)
+
+add_route(5462, 4882)
+print("qwe")
 
 def delete_routes(id1, id3):
     try:
