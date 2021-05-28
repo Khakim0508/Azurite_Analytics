@@ -2,6 +2,7 @@ import math
 import pandas as pd
 import datetime
 import psycopg2
+import os
 from algorithms.graph_algorithms import bfs
 from algorithms.graph_algorithms import construct_graph
 from algorithms.graph_algorithms import dijikstra_graph
@@ -339,7 +340,7 @@ def commit_to_db(conn, cursor, table_name, df):
 
             # the connection is not autocommitted by default, so we must commit to save our changes
             conn.commit()
-        except Exception:
+        except ZeroDivisionError:
             print("Commit to DB fail")
 
 
@@ -359,20 +360,26 @@ def construct_report(conn, cursor):
     dt = dt + hours_added - mins
     dt = dt.strftime("%Y-%m-%d %H:%M")
     #data = pd.DataFrame(data=sh, columns=sh.keys())
-    data = pd.read_excel("Dislocation.xls")
-    cols = {"Станция отправления" : 'FromStationName', "Станция назначения" : 'ToStationName',
+
+    pre = os.path.dirname(os.path.realpath(__file__))
+    path = os.path.join(pre, "Dislocation.xls")
+    data = pd.read_excel(path)
+    cols = {"Номер вагона" : "CarNumber", "Станция отправления" : 'FromStationName', "Станция назначения" : 'ToStationName',
             "Станция текущей дислокации" : 'LastStationName',
                      "Груз" : 'CargoEtsngName',
-            "Остаточный пробег" : 'RestDistance'}
+            "Расстояние осталось (от текущей станции)" : 'RestDistance',
+            "Дата и время отправления" : "ShippingDate", "Дата и время последней операции" : "LastOperationDate",
+            "Остаточный пробег": "RestRun"}
     data.rename(columns=cols, inplace=True)
-    data = data.loc[0:, ['FromStationName', 'ToStationName', 'LastStationName',
-                     'CargoEtsngName', 'RestDistance']]
+
+    data = data.loc[0:, ["CarNumber", 'FromStationName', 'ToStationName', 'LastStationName',
+                     'CargoEtsngName', 'RestDistance', 'ShippingDate', "LastOperationDate"]]
     data["CargoEtsngName"] = data["CargoEtsngName"].fillna('')
     data["ShippingDate"] = data["ShippingDate"].replace({pd.NaT: None})
     data["LastOperationDate"] = data["LastOperationDate"].replace({pd.NaT: None})
 
     data["update_datetime"] = dt
-    data['RestRun'] = data['RestRun'].fillna(0)
+    #data['RestRun'] = data['RestRun'].fillna(0)
     commit_to_db(conn, cursor, "dislocation", data)
 
     result = None
