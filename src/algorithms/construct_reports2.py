@@ -363,7 +363,7 @@ def construct_report(conn, cursor):
     #data = pd.DataFrame(data=sh, columns=sh.keys())
 
     pre = os.path.dirname(os.path.realpath(__file__))
-    path = os.path.join(pre, "Dislocation.xls")
+    path = os.path.join(pre, "Dislocation.xlsx")
     data = pd.read_excel(path)
     cols = {"Номер вагона": "CarNumber",
             "Станция отправления": 'FromStationName',
