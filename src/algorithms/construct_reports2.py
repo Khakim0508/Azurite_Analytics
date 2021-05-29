@@ -354,26 +354,50 @@ def construct_report(conn, cursor):
     #
     # sh = engine.execute(
     #     "SELECT * FROM Local.CarLocation where fromstationname IS NOT NULL AND tostationname IS NOT NULL AND laststationname IS NOT NULL AND cargoweight IS NOT NULL")
-    dt = datetime.datetime.now()
-    hours_added = datetime.timedelta(hours=7)
-    mins = datetime.timedelta(minutes=dt.minute, seconds=dt.second)
-    dt = dt + hours_added - mins
+    # dt = datetime.datetime.now()
+    # hours_added = datetime.timedelta(hours=17)
+    # mins = datetime.timedelta(minutes=dt.minute, seconds=dt.second)
+    # dt = dt + hours_added - mins
+    dt = datetime.datetime(2020, 5, 28, 17, 0)
     dt = dt.strftime("%Y-%m-%d %H:%M")
     #data = pd.DataFrame(data=sh, columns=sh.keys())
 
     pre = os.path.dirname(os.path.realpath(__file__))
     path = os.path.join(pre, "Dislocation.xls")
     data = pd.read_excel(path)
-    cols = {"Номер вагона" : "CarNumber", "Станция отправления" : 'FromStationName', "Станция назначения" : 'ToStationName',
-            "Станция текущей дислокации" : 'LastStationName',
-                     "Груз" : 'CargoEtsngName',
-            "Расстояние осталось (от текущей станции)" : 'RestDistance',
-            "Дата и время отправления" : "ShippingDate", "Дата и время последней операции" : "LastOperationDate",
-            "Остаточный пробег": "RestRun"}
+    cols = {"Номер вагона": "CarNumber",
+            "Станция отправления": 'FromStationName',
+            "Станция назначения": 'ToStationName',
+            "Станция текущей дислокации": 'LastStationName',
+            "Груз": 'CargoEtsngName',
+            "Расстояние осталось (от текущей станции)": 'RestDistance',
+            "Дата и время отправления": "ShippingDate",
+            "Дата и время последней операции": "LastOperationDate",
+            "Остаточный пробег": "RestRun",
+            "Операция (полное наименование)": "LastOperationName",
+            "Простой на станции дислокации": "IdleOnTheLastStation",
+            "Собственник (по данным ЭТРАН, ГВЦ)": "OwnerName",
+            "Состояние вагона": "CarStateName",
+            "Группа": "GroupName",
+            "Вес груза, тонны": "CargoWeight",
+            "код ст. отправления (6 знаков)": "FromStationCode",
+            "код ст. назначения (6 знаков)": "ToStationCode",
+            "Станция текущей дислокации, код": "LastStationCode",
+            "Груз, код": "CargoEtsngCode",
+            "Индекс поезда": "TrainIndex",
+            "НРП (вагон в нерабочем парке)": "RepairCurrent_isNRP",
+            "Неисправность текущая": "CarFaultinessName",
+            "Грузоподъемность, тн": "CarCapacity",
+            "Тип вагона": "CarTypeShortName",
+            "Номер поезда": "InvNumber",
+
+            }
     data.rename(columns=cols, inplace=True)
 
     data = data.loc[0:, ["CarNumber", 'FromStationName', 'ToStationName', 'LastStationName',
-                     'CargoEtsngName', 'RestDistance', 'ShippingDate', "LastOperationDate"]]
+                     'CargoEtsngName', 'RestDistance', 'ShippingDate', "LastOperationDate",
+                         "LastOperationName", "IdleOnTheLastStation", "OwnerName", "CarStateName",
+                         "GroupName"]]
     data["CargoEtsngName"] = data["CargoEtsngName"].fillna('')
     data["ShippingDate"] = data["ShippingDate"].replace({pd.NaT: None})
     data["LastOperationDate"] = data["LastOperationDate"].replace({pd.NaT: None})
