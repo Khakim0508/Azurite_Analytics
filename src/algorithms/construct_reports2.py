@@ -358,12 +358,12 @@ def construct_report(conn, cursor):
     # hours_added = datetime.timedelta(hours=17)
     # mins = datetime.timedelta(minutes=dt.minute, seconds=dt.second)
     # dt = dt + hours_added - mins
-    dt = datetime.datetime(2020, 5, 29, 17, 0)
+    dt = datetime.datetime(2020, 5, 30, 17, 0)
     dt = dt.strftime("%Y-%m-%d %H:%M")
     #data = pd.DataFrame(data=sh, columns=sh.keys())
 
     pre = os.path.dirname(os.path.realpath(__file__))
-    path = os.path.join(pre, "Dislocation.xlsx")
+    path = os.path.join(pre, "Dislocation.xls")
     data = pd.read_excel(path)
     cols = {"Номер вагона": "CarNumber",
             "Станция отправления": 'FromStationName',
