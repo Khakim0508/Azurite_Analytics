@@ -20,10 +20,10 @@ def job1():
     delete_trash(cursor, conn)
 
 if __name__ == "__main__":
-    schedule.every().day.at("01:45").do(job)
-    schedule.every().day.at("04:45").do(job)
-    schedule.every().day.at("07:45").do(job)
-    schedule.every().day.at("10:45").do(job)
+    # schedule.every().day.at("01:45").do(job)
+    # schedule.every().day.at("04:45").do(job)
+    # schedule.every().day.at("07:45").do(job)
+    # schedule.every().day.at("10:45").do(job)
     schedule.every().day.at("15:45").do(job1)
 
 
