@@ -358,7 +358,7 @@ def construct_report(conn, cursor):
     # hours_added = datetime.timedelta(hours=17)
     # mins = datetime.timedelta(minutes=dt.minute, seconds=dt.second)
     # dt = dt + hours_added - mins
-    dt = datetime.datetime(2021, 6, 4, 8, 0)
+    dt = datetime.datetime(2021, 6, 4, 14, 0)
     dt = dt.strftime("%Y-%m-%d %H:%M")
     #data = pd.DataFrame(data=sh, columns=sh.keys())
 
@@ -415,7 +415,9 @@ def construct_report(conn, cursor):
         ['Усть-Таловка', 'Неверовская'],
         ['Балхаш I'],
         ['Бозшаколь'],
-        ['Актогай']
+        ['Актогай'],
+        ['Балхаш I', 'Достык'],
+        ['Бозшаколь', 'Достык']
     ]
 
     routes = [
@@ -423,12 +425,21 @@ def construct_report(conn, cursor):
         'БМЗ',
         'КБЛ',
         'КАЛ',
+        'Балхаш I - Достык',
+        'Бозшаколь - Достык'
     ]
 
     result = construct_report_by_route(data, cursor, 'Общая карта', 0, dt, result)
 
     for i in range(len(stations)):
-        df = data.loc[data['FromStationName'].isin(stations[i]) | data['ToStationName'].isin(stations[i])]
+        df = data
+
+        if i < 4:
+            df = data.loc[data['FromStationName'].isin(stations[i]) | data['ToStationName'].isin(stations[i])]
+
+        else:
+            df = data.loc[data['FromStationName'].isin(stations[i]) & data['ToStationName'].isin(stations[i])]
+
         df = df.loc[0:, ['FromStationName', 'ToStationName', 'LastStationName',
                          'CargoEtsngName', 'RestDistance']]
 
