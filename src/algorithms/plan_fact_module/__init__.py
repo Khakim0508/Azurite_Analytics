@@ -4,7 +4,7 @@ import psycopg2
 
 def commit_to_db(df):
     conn = psycopg2.connect(dbname='flow_map', user='postgres',
-                            password='root', host='localhost')
+                            password='root', host='134.209.101.123')
     cursor = conn.cursor()
 
     cols = ", ".join([str(i) for i in df.keys()])
@@ -14,11 +14,14 @@ def commit_to_db(df):
             cursor.execute(sql, tuple(row))
 
             conn.commit()
+            print(str(i) + " is successful yopta")
         except psycopg2.IntegrityError:
+            print("psycopg2.IntegrityError")
             conn.rollback()
         except Exception:
+            print("Exception")
             conn.rollback()
     conn.close()
 
-df = pd.read_excel("Plan.xlsx")
+df = pd.read_excel("KAL.xlsx")
 commit_to_db(df)
