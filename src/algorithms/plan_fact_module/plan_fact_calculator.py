@@ -4,7 +4,7 @@ import os
 
 
 
-file_name_template = "Dislocation_2021-02-{}_08-00-00_15.xls"
+
 def commit_to_db(df):
     conn = psycopg2.connect(dbname='flow_map', user='postgres',
                             password='root', host='localhost')
@@ -23,7 +23,7 @@ def commit_to_db(df):
             conn.rollback()
     conn.close()
 
-
+file_name_template = "Dislocation_2021-02-{}_08-00-00_15.xls"
 for i in range(19, 29):
     df = pd.DataFrame
     if i < 10:
