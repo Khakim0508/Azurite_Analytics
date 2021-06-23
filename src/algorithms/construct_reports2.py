@@ -358,7 +358,7 @@ def construct_report(conn, cursor):
     # hours_added = datetime.timedelta(hours=17)
     # mins = datetime.timedelta(minutes=dt.minute, seconds=dt.second)
     # dt = dt + hours_added - mins
-    dt = datetime.datetime(2021, 6, 23, 8, 0)
+    dt = datetime.datetime(2021, 6, 23, 14, 0)
     dt = dt.strftime("%Y-%m-%d %H:%M")
     #data = pd.DataFrame(data=sh, columns=sh.keys())
 
