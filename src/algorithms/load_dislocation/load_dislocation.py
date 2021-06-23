@@ -34,8 +34,8 @@ cols = {"Номер вагона": "CarNumber",
 
 pd.set_option("display.max_rows", None, "display.max_columns", None)
 
-def commit_df(filename, day_number):
-    dt = datetime.datetime(2021, 1, day_number, 17, 0)
+def commit_df(filename, day_number, month_number):
+    dt = datetime.datetime(2021, month_number, day_number, 17, 0)
     pre = os.path.dirname(os.path.realpath(__file__))
     path = os.path.join(pre, filename)
     data = pd.read_excel(path)
@@ -93,16 +93,16 @@ def commit_to_db(conn, cursor, table_name, df):
 
 def commit_month_dislocation(month_number):
     file_name_template = "Dislocation_2021-0" + str(month_number) + "-{}_08-00-00_15.xls"
-    for i in range(1, 31):
+    for i in range(1, 32):
         try:
             if i < 10:
-                commit_df(file_name_template.format("0" + str(i)), i)
+                commit_df(file_name_template.format("0" + str(i)), i, month_number)
             else:
-                commit_df(file_name_template.format(str(i)), i)
+                commit_df(file_name_template.format(str(i)), i, month_number)
         except Exception:
             print(i, end=" ")
             print("число не было обработано")
 
 
-commit_month_dislocation(1)
+commit_month_dislocation(2)
 print("successnyi success")
