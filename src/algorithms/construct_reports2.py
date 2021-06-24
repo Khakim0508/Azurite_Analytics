@@ -390,20 +390,38 @@ def construct_report(conn, cursor):
             "Грузоподъемность, тн": "CarCapacity",
             "Тип вагона": "CarTypeShortName",
             "Номер поезда": "InvNumber",
-
+            "Дата след. ДР": "PlannedRepairDate"
             }
+
     data.rename(columns=cols, inplace=True)
 
-    data = data.loc[0:, ["CarNumber", 'FromStationName', 'ToStationName', 'LastStationName',
-                     'CargoEtsngName', 'RestDistance', 'ShippingDate', "LastOperationDate",
-                         "LastOperationName", "IdleOnTheLastStation", "OwnerName", "CarStateName",
-                         "GroupName"]]
+    data = data.loc[0:, ["CarNumber", "FromStationCode", "FromStationName", "ShippingDate",
+                         "ToStationCode", "ToStationName", "LastOperationDate",
+                         "LastStationName", "LastOperationName", "LastStationCode", "RestDistance",
+                         "CargoEtsngName", "CargoEtsngCode", "TrainIndex", "IdleOnTheLastStation",
+                         "GroupName", "CargoWeight", "RepairCurrent_isNRP", "CarFaultinessName",
+                         "OwnerName", "CarCapacity", "CarTypeShortName", "InvNumber",
+                         "RestRun", "CarStateName", "PlannedRepairDate"]]
+
+    data["FromStationCode"] = data["FromStationCode"].fillna(0)
+    data["FromStationCode"] = data["FromStationCode"].astype(int)
+
+    data["InvNumber"] = data["InvNumber"].fillna(0)
+    data["InvNumber"] = data["InvNumber"].astype(int)
+
+    data["ToStationCode"] = data["ToStationCode"].fillna(0)
+    data["ToStationCode"] = data["ToStationCode"].astype(int)
+
+    data["LastStationCode"] = data["LastStationCode"].fillna(0)
+    data["LastStationCode"] = data["LastStationCode"].astype(int)
+
     data["CargoEtsngName"] = data["CargoEtsngName"].fillna('')
     data["ShippingDate"] = data["ShippingDate"].replace({pd.NaT: None})
+    data["PlannedRepairDate"] = data["PlannedRepairDate"].replace({pd.NaT: None})
     data["LastOperationDate"] = data["LastOperationDate"].replace({pd.NaT: None})
-
+    data['RestRun'] = data['RestRun'].fillna(0)
     data["update_datetime"] = dt
-    #data['RestRun'] = data['RestRun'].fillna(0)
+
     commit_to_db(conn, cursor, "dislocation", data)
 
     result = None
