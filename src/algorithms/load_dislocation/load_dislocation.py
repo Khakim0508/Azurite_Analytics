@@ -104,5 +104,5 @@ def commit_month_dislocation(month_number):
             print("число не было обработано")
 
 
-commit_month_dislocation(5)
+commit_month_dislocation(1)
 print("successnyi success")
