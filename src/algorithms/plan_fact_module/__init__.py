@@ -14,7 +14,6 @@ def commit_to_db(df):
             cursor.execute(sql, tuple(row))
 
             conn.commit()
-            print(str(i) + " is successful yopta")
         except psycopg2.IntegrityError:
             print("psycopg2.IntegrityError")
             conn.rollback()
@@ -24,4 +23,6 @@ def commit_to_db(df):
     conn.close()
 
 df = pd.read_excel("KAL.xlsx")
+commit_to_db(df)
+df = pd.read_excel("KBL.xlsx")
 commit_to_db(df)
