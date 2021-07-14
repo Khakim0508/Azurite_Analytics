@@ -22,9 +22,9 @@ def commit_to_db(df):
             conn.rollback()
     conn.close()
 
-df = pd.read_excel("KAL.xlsx")
+df = pd.read_excel("NEV.xlsx")
 commit_to_db(df)
-df = pd.read_excel("KBL.xlsx")
+print("all done")
+df = pd.read_excel("TAL.xlsx")
 commit_to_db(df)
-df = pd.read_excel("BMZ.xlsx")
-commit_to_db(df)
+print("all done")
