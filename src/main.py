@@ -24,7 +24,7 @@ if __name__ == "__main__":
     # schedule.every().day.at("04:45").do(job)
     # schedule.every().day.at("07:45").do(job)
     # schedule.every().day.at("10:45").do(job)
-    schedule.every().day.at("15:45").do(job1)
+    #schedule.every().day.at("15:45").do(job1)
 
 
     while 1:
