@@ -109,12 +109,14 @@ def commit_month_dislocation(month_number, hour):
                 commit_df(file_name_template.format(str(i)), i, month_number, hour)
         except Exception:
             print(file_name_template)
+            print(i)
             print("число не было обработано")
 
 
-month = 2
-commit_month_dislocation(month, 8)
-commit_month_dislocation(month, 13)
-commit_month_dislocation(month, 17)
+for i in range(3, 8):
+    month = i
+    commit_month_dislocation(month, 8)
+    commit_month_dislocation(month, 13)
+    commit_month_dislocation(month, 17)
 
 print("successnyi success")
