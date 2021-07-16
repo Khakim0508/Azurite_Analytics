@@ -17,14 +17,13 @@ def commit_to_db(df):
         except psycopg2.IntegrityError:
             print("psycopg2.IntegrityError")
             conn.rollback()
-        except Exception:
-            print("Exception")
-            conn.rollback()
+
     conn.close()
+
 
 df = pd.read_excel("NEV.xlsx")
 commit_to_db(df)
 print("all done")
-df = pd.read_excel("TAL.xlsx")
-commit_to_db(df)
+# df = pd.read_excel("TAL.xlsx")
+# commit_to_db(df)
 print("all done")
