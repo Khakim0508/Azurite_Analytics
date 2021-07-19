@@ -113,7 +113,7 @@ def commit_month_dislocation(month_number, hour):
             print("число не было обработано")
 
 
-for i in range(3, 8):
+for i in range(7, 8):
     month = i
     commit_month_dislocation(month, 8)
     commit_month_dislocation(month, 13)
