@@ -10,13 +10,13 @@ conn = psycopg2.connect(dbname='flow_map', user='postgres',
 cursor = conn.cursor()
 
 conn2 = psycopg2.connect(dbname='flow_map', user='postgres',
-                        password='root', host='')
+                        password='root', host='134.209.101.123')
 
 cursor2 = conn2.cursor()
 
 def haversine(lat1, lon1, lat2, lon2):
     """
-    Calculate the great circle distance between two points134.209.101.123
+    Calculate the great circle distance between two points
     on the earth (specified in decimal degrees)
     """
     # convert decimal degrees to radians
