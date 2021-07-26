@@ -21,7 +21,7 @@ def commit_to_db(df):
     conn.close()
 
 
-df = pd.read_excel("NEV.xlsx")
+df = pd.read_excel("KBL.xlsx")
 df['CarAmount'] = df['CarAmount'].fillna(0)
 commit_to_db(df)
 print(df)
