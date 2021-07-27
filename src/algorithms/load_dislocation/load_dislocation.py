@@ -93,16 +93,16 @@ def commit_to_db(conn, cursor, table_name, df):
 
 def commit_month_dislocation(month_number, hour):
 
-    file_name_template = "Dislocation_2021-0" + str(month_number) + "-{}_08-00-00_15.xls"
+    file_name_template = "Dislocation_2020-0" + str(month_number) + "-{}_08-00-00_15.xls"
 
     if hour == 13:
-        file_name_template = "Dislocation_2021-0" + str(month_number) + "-{}_13-00-00_15.xls"
+        file_name_template = "Dislocation_2020-0" + str(month_number) + "-{}_13-00-00_15.xls"
 
     if hour == 17:
-        file_name_template = "Dislocation_2021-0" + str(month_number) + "-{}_17-00-00_15.xls"
+        file_name_template = "Dislocation_2020-0" + str(month_number) + "-{}_17-00-00_15.xls"
 
     if hour == 20:
-        file_name_template = "Dislocation_2021-0" + str(month_number) + "-{}_20-00-00_15.xls"
+        file_name_template = "Dislocation_2020-0" + str(month_number) + "-{}_20-00-00_15.xls"
 
     for i in range(1, 32):
         try:
@@ -120,7 +120,7 @@ for i in range(7, 8):
     month = i
     commit_month_dislocation(month, 8)
     commit_month_dislocation(month, 13)
-    commit_month_dislocation(month, 17)
-    commit_month_dislocation(month, 20)
+    # commit_month_dislocation(month, 17)
+    # commit_month_dislocation(month, 20)
 
 print("successnyi success")
