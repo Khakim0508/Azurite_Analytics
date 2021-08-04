@@ -24,7 +24,21 @@ def commit_to_db(df):
 df = pd.read_excel("KBL.xlsx")
 df['CarAmount'] = df['CarAmount'].fillna(0)
 commit_to_db(df)
-print(df)
-# df = pd.read_excel("TAL.xlsx")
-# commit_to_db(df)
+
+df = pd.read_excel("TAL.xlsx")
+df['CarAmount'] = df['CarAmount'].fillna(0)
+commit_to_db(df)
+
+df = pd.read_excel("BMZ.xlsx")
+df['CarAmount'] = df['CarAmount'].fillna(0)
+commit_to_db(df)
+
+df = pd.read_excel("KAL.xlsx")
+df['CarAmount'] = df['CarAmount'].fillna(0)
+commit_to_db(df)
+
+df = pd.read_excel("NEV.xlsx")
+df['CarAmount'] = df['CarAmount'].fillna(0)
+commit_to_db(df)
+
 print("all done")
