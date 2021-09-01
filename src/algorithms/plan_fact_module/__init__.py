@@ -4,7 +4,7 @@ import psycopg2
 
 def commit_to_db(df):
     conn = psycopg2.connect(dbname='flow_map', user='postgres',
-                            password='root', host='134.209.101.123')#134.209.101.123
+                            password='root', host='localhost')#134.209.101.123
     cursor = conn.cursor()
 
     cols = ", ".join([str(i) for i in df.keys()])
@@ -35,7 +35,7 @@ df['CarAmount'] = df['CarAmount'].fillna(0)
 print(1)
 df = pd.read_excel("KAL.xlsx")
 df['CarAmount'] = df['CarAmount'].fillna(0)
-commit_to_db(df)
+#commit_to_db(df)
 print(1)
 df = pd.read_excel("NEV.xlsx")
 df['CarAmount'] = df['CarAmount'].fillna(0)
