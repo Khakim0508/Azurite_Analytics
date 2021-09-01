@@ -3,8 +3,8 @@ import psycopg2
 
 
 def commit_to_db(df):
-    conn = psycopg2.connect(dbname='flow_map', user='postgres',
-                            password='root', host='134.209.101.123')
+    conn = psycopg2.connect(dbname='flow_map2', user='postgres',
+                            password='root', host='localhost')#134.209.101.123
     cursor = conn.cursor()
 
     cols = ", ".join([str(i) for i in df.keys()])
@@ -23,22 +23,22 @@ def commit_to_db(df):
 
 df = pd.read_excel("KBL.xlsx")
 df['CarAmount'] = df['CarAmount'].fillna(0)
-commit_to_db(df)
-
+#commit_to_db(df)
+print(1)
 df = pd.read_excel("TAL.xlsx")
 df['CarAmount'] = df['CarAmount'].fillna(0)
-commit_to_db(df)
-
+#commit_to_db(df)
+print(1)
 df = pd.read_excel("BMZ.xlsx")
 df['CarAmount'] = df['CarAmount'].fillna(0)
-commit_to_db(df)
-
+#commit_to_db(df)
+print(1)
 df = pd.read_excel("KAL.xlsx")
 df['CarAmount'] = df['CarAmount'].fillna(0)
 commit_to_db(df)
-
+print(1)
 df = pd.read_excel("NEV.xlsx")
 df['CarAmount'] = df['CarAmount'].fillna(0)
 commit_to_db(df)
-
+print(1)
 print("all done")
