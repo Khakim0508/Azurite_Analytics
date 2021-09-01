@@ -12,7 +12,7 @@ def commit_to_db(df):
         try:
             sql = "INSERT INTO " + "PLAN_CARRIAGE" + " (" + cols + ") VALUES (" + "%s," * (len(row) - 1) + "%s)"
             cursor.execute(sql, tuple(row))
-
+            print(sql)
             conn.commit()
         except psycopg2.IntegrityError:
             print("psycopg2.IntegrityError")
