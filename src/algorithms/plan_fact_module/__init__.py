@@ -3,8 +3,8 @@ import psycopg2
 
 
 def commit_to_db(df):
-    conn = psycopg2.connect(dbname='flow_map2', user='postgres',
-                            password='root', host='localhost')#134.209.101.123
+    conn = psycopg2.connect(dbname='flow_map', user='postgres',
+                            password='root', host='134.209.101.123')#134.209.101.123
     cursor = conn.cursor()
 
     cols = ", ".join([str(i) for i in df.keys()])
