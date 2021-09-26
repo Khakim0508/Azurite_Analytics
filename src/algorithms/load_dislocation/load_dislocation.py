@@ -95,6 +95,9 @@ def commit_month_dislocation(month_number, hour):
 
     file_name_template = "Dislocation_2021-0" + str(month_number) + "-{}_08-00-00_15.xls"
 
+    if hour == 4:
+        file_name_template = "Dislocation_2021-0" + str(month_number) + "-{}_04-00-00_15.xls"
+
     if hour == 13:
         file_name_template = "Dislocation_2021-0" + str(month_number) + "-{}_13-00-00_15.xls"
 
@@ -118,7 +121,7 @@ def commit_month_dislocation(month_number, hour):
 
 for i in range(7, 13):
     month = i
-    commit_month_dislocation(month, 8)
+    commit_month_dislocation(month, 4)
     commit_month_dislocation(month, 8)
     commit_month_dislocation(month, 13)
     commit_month_dislocation(month, 17)
