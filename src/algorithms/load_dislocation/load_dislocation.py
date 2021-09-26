@@ -119,6 +119,7 @@ def commit_month_dislocation(month_number, hour):
 for i in range(7, 13):
     month = i
     commit_month_dislocation(month, 8)
+    commit_month_dislocation(month, 8)
     commit_month_dislocation(month, 13)
     commit_month_dislocation(month, 17)
     commit_month_dislocation(month, 20)
