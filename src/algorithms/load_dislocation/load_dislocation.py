@@ -29,8 +29,7 @@ cols = {"Номер вагона": "CarNumber",
         "Тип вагона": "CarTypeShortName",
         "Номер поезда": "InvNumber",
         "Дата след. ДР" : "PlannedRepairDate"
-    }
-
+}
 
 pd.set_option("display.max_rows", None, "display.max_columns", None)
 
